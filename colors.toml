@@ -2,6 +2,10 @@ mode = "light"
 
 # TereTube is an ink-and-orange theme on warm ivory surfaces.
 accent = "#AA4B00"
+
+# Explicit Hyprland window border colors: orange active, ink inactive.
+hyprland_active_border = "rgba(AA4B00ff)"
+hyprland_inactive_border = "rgba(253439aa)"
 selection = "#F1C8B6"
 muted = "#596265"
 
