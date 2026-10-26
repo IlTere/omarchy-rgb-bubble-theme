@@ -1,0 +1,33 @@
+mode = "light"
+
+# TereTube is an ink-and-orange theme on warm ivory surfaces.
+accent = "#AA4B00"
+selection = "#F1C8B6"
+muted = "#596265"
+
+background = "#F3EFE7"
+dark_background = "#EAE4DA"
+darker_background = "#DDD5CA"
+lighter_background = "#FBF8F2"
+
+foreground = "#253439"
+dark_foreground = "#39484D"
+light_foreground = "#253439"
+bright_foreground = "#1E2D32"
+
+# Keep ANSI and status colors in the same contrast-safe orange family.
+red = "#8F3F00"
+yellow = "#A04400"
+orange = "#AA4B00"
+green = "#984200"
+cyan = "#A34700"
+blue = "#8F3F00"
+magenta = "#A04400"
+brown = "#873B00"
+
+bright_red = "#A04400"
+bright_yellow = "#AA4B00"
+bright_green = "#A04400"
+bright_cyan = "#AA4B00"
+bright_blue = "#984200"
+bright_magenta = "#AA4B00"

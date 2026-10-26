@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
+  <rect width="1600" height="900" fill="#F3EFE7"/>
+  <text x="40" y="62" fill="#253439" font-family="DejaVu Sans, sans-serif" font-size="42" font-weight="700">TereTube Theme</text>
+  <text x="42" y="94" fill="#596265" font-family="DejaVu Sans, sans-serif" font-size="18">Light · ink #253439 · burnt orange #AA4B00 · warm ivory #F3EFE7 · by @terelux · art with ChatGPT (OpenAI)</text>
+  <g font-family="DejaVu Sans, sans-serif" font-size="18" fill="#253439">
+    <image href="backgrounds/1-teretube-ink-flow.png" x="40" y="130" width="480" height="300"/>
+    <text x="40" y="460">Ink Flow</text>
+    <image href="backgrounds/2-teretube-ink-strata.png" x="560" y="130" width="480" height="300"/>
+    <text x="560" y="460">Ink Strata</text>
+    <image href="backgrounds/3-teretube-ivory-strata.png" x="1080" y="130" width="480" height="300"/>
+    <text x="1080" y="460">Ivory Strata</text>
+    <image href="backgrounds/4-teretube-ivory-waves.png" x="300" y="500" width="480" height="300"/>
+    <text x="300" y="830">Ivory Waves</text>
+    <image href="backgrounds/5-teretube-geometric.png" x="820" y="500" width="480" height="300"/>
+    <text x="820" y="830">Geometric</text>
+  </g>
+</svg>
