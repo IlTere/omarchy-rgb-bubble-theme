@@ -6,7 +6,7 @@ This is an independent community theme. It is not an official Omarchy or OpenAI 
 
 ## Install
 
-After this folder is published as a public GitHub repository:
+Install from the public GitHub repository:
 
 ```sh
 omarchy theme install https://github.com/IlTere/omarchy-teretube-theme
@@ -26,7 +26,7 @@ See [CREDITS.md](CREDITS.md) for per-file provenance.
 
 ## License
 
-No license has been selected yet. Choose and add a `LICENSE` file before public release so the reuse terms for both the theme files and wallpaper artwork are clear.
+No `LICENSE` file is included yet. The Omarchy registry treats this as a warning. This repository does not grant reuse terms; add a license if you want to grant permission to reuse the theme files and wallpapers.
 
 ## Omarchy compatibility
 
