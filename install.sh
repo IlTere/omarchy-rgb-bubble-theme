@@ -558,7 +558,7 @@ install_theme_files() {
     [[ -e $entry ]] || continue
     name=${entry##*/}
     case "$name" in
-      .git|.gitignore|variants|app-themes|packaging|pyproject.toml|AI_AGENT_HANDOFF.md|RGB-Bubble-project-export.zip)
+      .git|.gitignore|variants|app-themes|packaging|pyproject.toml|AI_AGENT_HANDOFF.md|OMARCHY_SITE_PR_GUIDE.md|RGB-Bubble-project-export.zip)
         continue
         ;;
     esac

@@ -2,6 +2,7 @@
 *.zip
 *.tar.gz
 AI_AGENT_HANDOFF.md
+OMARCHY_SITE_PR_GUIDE.md
 
 # Paused variants and unused app themes (kept locally, not published yet)
 variants/
