@@ -27,6 +27,32 @@ cleanup() {
 }
 trap cleanup EXIT
 
+refresh_theme_selector_cache() {
+  local cache_root="${XDG_CACHE_HOME:-$HOME/.cache}/omarchy"
+  rm -f \
+    "$cache_root/theme-selector/fast-signature" \
+    "$cache_root/theme-selector/signature" \
+    "$cache_root/image-selector/"*.fast-signature \
+    "$cache_root/image-selector/"*.signature \
+    "$cache_root/image-selector/"*.rows 2>/dev/null || true
+
+  if [[ -d $HOME/.config/omarchy/themes/$RGB_BUBBLE_THEME ]]; then
+    touch "$HOME/.config/omarchy/themes/$RGB_BUBBLE_THEME" 2>/dev/null || true
+  fi
+
+  if command -v omarchy-theme-switcher >/dev/null 2>&1; then
+    omarchy-theme-switcher --preload >/dev/null 2>&1 || true
+  fi
+
+  if command -v omarchy-menu-images >/dev/null 2>&1 && [[ -d $cache_root/theme-selector/previews ]]; then
+    omarchy-menu-images --cache-only "$cache_root/theme-selector/previews" >/dev/null 2>&1 || true
+  fi
+
+  if command -v omarchy-theme-switcher >/dev/null 2>&1; then
+    omarchy-theme-switcher --preload >/dev/null 2>&1 || true
+  fi
+}
+
 reload_desktop_session() {
   if pgrep -x Hyprland >/dev/null 2>&1 && command -v hyprctl >/dev/null 2>&1; then
     hyprctl reload >/dev/null || echo "Hyprland reload failed; inspect hyprctl configerrors." >&2
@@ -37,6 +63,8 @@ reload_desktop_session() {
   if pgrep -x quickshell >/dev/null 2>&1 && command -v omarchy-restart-shell >/dev/null 2>&1; then
     omarchy-restart-shell || echo "Could not restart Omarchy shell; restart it from the desktop session." >&2
   fi
+
+  refresh_theme_selector_cache
 }
 
 uninstall_rgb_bubble() {
