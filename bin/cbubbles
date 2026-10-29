@@ -1,0 +1,769 @@
+#!/usr/bin/env python3
+"""
+cbubbles — Underwater RGB Bubble ASCII/Pixel terminal animation for Omarchy.
+Created for the RGB Bubble theme by @terelux.
+"""
+
+import argparse
+import curses
+import math
+import random
+import signal
+import sys
+import time
+
+# Exact 81x19 pixel grid of the official Omarchy wordmark
+OMARCHY_GRID_ROWS = [
+    ".................###.............................................................",
+    "..#####......###########......#######....#######....#######....#...#......#...#..",
+    ".#######....#############....########...########...########...##...##....##...##.",
+    "###...###..###...###...###..###...###..###...###..###...###..###...###..###...###",
+    "###...###..###...###...###..###...###..###...###..###...###..###...###..###...###",
+    "###...###..###...###...###..###...###..###...###..###...##...###...###..###...###",
+    "###...###..###...###...###..###...###..###...###..###...#....###...###..###...###",
+    "###...###..###...###...###..###...###..###...###..###........###...###..###...###",
+    "###...###..###...###...###.##########.#########...###.......###########.#########",
+    "###...###..###...###...###.##########.########....###......###########..#########",
+    "###...###..###...###...###..###...###..###........###........###...###........###",
+    "###...###..###...###...###..###...###.##########..###...#....###...###...##...###",
+    "###...###..###...###...###..###...###.##########..###...##...###...###..###...###",
+    "###...###..###...###...###..###...###..###...###..###...###..###...###..###...###",
+    "###...###..###...###...###..###...###..###...###..###...###..###...###..###...###",
+    ".#######....##...###...##...###...##...###...###..########...###...##....#######.",
+    "..#####......#...###...#....###...#....###...###..#######....###...#......#####..",
+    ".......................................###...##..................................",
+    ".......................................###...#...................................",
+]
+
+COMPACT_LOGO_ROWS = [
+    " ╭───╮ ╭─┬─╮ ╭───╮ ╭───╮ ╭───╮ ╷   ╷ ╷   ╷ ",
+    " │   │ │ │ │ ├───┤ ├──┬╯ │     ├───┤ ╰─┬─╯ ",
+    " ╰───╯ ╵ ╵ ╵ ╵   ╵ ╵  ╰─ ╰───╯ ╵   ╵   ╵   ",
+]
+
+# RGB Bubble theme colors (R, G, B)
+THEME_COLORS = {
+    "red": ((255, 113, 132), (255, 145, 160)),     # #FF7184 / #FF91A0
+    "green": ((74, 214, 154), (114, 231, 177)),    # #4AD69A / #72E7B1
+    "blue": ((115, 163, 255), (152, 186, 255)),    # #73A3FF / #98BAFF
+    "cyan": ((101, 220, 226), (132, 233, 237)),    # #65DCE2 / #84E9ED
+    "magenta": ((209, 154, 255), (224, 180, 255)), # #D19AFF / #E0B4FF
+    "muted": ((141, 157, 180), (201, 216, 237)),   # #8D9DB4 / #C9D8ED
+    "white": ((230, 240, 255), (248, 251, 255)),   # #E6F0FF / #F8FBFF
+}
+
+PALETTES = {
+    "rgb": ["red", "green", "blue"],
+    "red": ["red"],
+    "green": ["green"],
+    "blue": ["blue"],
+    "ocean": ["blue", "green", "cyan"],
+    "coral": ["red", "magenta", "blue"],
+    "mono": ["muted", "white"],
+}
+
+PALETTE_CYCLE = ["rgb", "ocean", "coral", "red", "green", "blue", "mono"]
+SIZE_MODES = ["random", "small", "medium", "large", "giant"]
+STYLE_MODES = ["mixed", "ascii", "pixel"]
+
+
+def _parse_art(lines: list[str], y_top: int) -> list[tuple[int, int, str, str]]:
+    """Convert multi-line ASCII art into (dx, dy, char, role) tuples."""
+    out = []
+    for row_idx, line in enumerate(lines):
+        dy = y_top + row_idx
+        for dx, ch in enumerate(line):
+            if ch == " ":
+                continue
+            if ch in ("✦", "*", "°", "▪"):
+                role = "glint"
+            elif ch in ("·", "▫", ":"):
+                role = "rim"
+            else:
+                role = "body"
+            out.append((dx, dy, ch, role))
+    return out
+
+
+# Classic ASCII hollow templates (Tiers 2 to 7 — up to 22x11 giant spheres)
+ASCII_TEMPLATES = {
+    2: _parse_art([
+        "(°)",
+    ], 0),
+    3: _parse_art([
+        " .-. ",
+        "(°  )",
+        " '-' ",
+    ], -1),
+    4: _parse_art([
+        "  .-~-.  ",
+        " /*°   \\ ",
+        "(       )",
+        " \\    ·/ ",
+        "  '-~-'  ",
+    ], -2),
+    5: _parse_art([
+        "   .-~~-.   ",
+        " .' *°   '. ",
+        "/  '       \\",
+        ";          ;",
+        "\\        · /",
+        " '.     ·.' ",
+        "   '-~~-'   ",
+    ], -3),
+    6: _parse_art([
+        "     .-~~~~-.     ",
+        "   .'  *°    '.   ",
+        "  /  °         \\  ",
+        " ;              ; ",
+        " |              | ",
+        " ;            · ; ",
+        "  \\          · /  ",
+        "   '.      · .'   ",
+        "     '-~~~~-'     ",
+    ], -4),
+    7: _parse_art([
+        "       . - ~~~~ - .       ",
+        "    . '   * °      ' .    ",
+        "  . '  °             ' .  ",
+        " /   '                  \\ ",
+        ";                        ;",
+        "|                        |",
+        ";                      · ;",
+        " \\                    · / ",
+        "  . '                · ' .",
+        "    . '          · · ' .  ",
+        "       ' - ~~~~ - '       ",
+    ], -5),
+}
+
+MIXED_TEMPLATES = {
+    2: _parse_art([
+        "╭°╮",
+        "╰─╯",
+    ], 0),
+    3: _parse_art([
+        " ╭──╮ ",
+        "│ °  │",
+        " ╰──╯ ",
+    ], -1),
+    4: _parse_art([
+        "  ╭─~─╮  ",
+        " ╱✦°   ╲ ",
+        "│       │",
+        " ╲    ·╱ ",
+        "  ╰─~─╯  ",
+    ], -2),
+    5: _parse_art([
+        "   ╭─~~─╮   ",
+        " ╭╯ ✦°   ╰╮ ",
+        "│  ·       │",
+        "│          │",
+        "│        · │",
+        " ╰╮     ·╭╯ ",
+        "   ╰─~~─╯   ",
+    ], -3),
+    6: _parse_art([
+        "     ╭──~~~~──╮     ",
+        "   ╭╯   ✦ °    ╰╮   ",
+        "  ╱   °          ╲  ",
+        " │                │ ",
+        " │                │ ",
+        " │              · │ ",
+        "  ╲            · ╱  ",
+        "   ╰╮        · ╭╯   ",
+        "     ╰──~~~~──╯     ",
+    ], -4),
+    7: _parse_art([
+        "       ╭───~~~~───╮       ",
+        "    ╭─╯    ✦ °     ╰─╮    ",
+        "  ╭╯    °             ╰╮  ",
+        " ╱    ·                 ╲ ",
+        "│                        │",
+        "│                        │",
+        "│                      · │",
+        " ╲                    · ╱ ",
+        "  ╰╮                · ╭╯  ",
+        "    ╰─╮          · ╭─╯    ",
+        "       ╰───~~~~───╯       ",
+    ], -5),
+}
+
+PIXEL_TEMPLATES = {
+    2: _parse_art([
+        "▛▜",
+        "▙▟",
+    ], 0),
+    3: _parse_art([
+        " ▄▄▄ ",
+        "█▪  █",
+        " ▀▀▀ ",
+    ], -1),
+    4: _parse_art([
+        "  ▄███▄  ",
+        " █▪°   █ ",
+        "█       █",
+        " █    ▫█ ",
+        "  ▀███▀  ",
+    ], -2),
+    5: _parse_art([
+        "   ▄████▄   ",
+        " ▄█ ▪°   █▄ ",
+        "█  ▪       █",
+        "█          █",
+        "█        ▫ █",
+        " ▀█     ▫█▀ ",
+        "   ▀████▀   ",
+    ], -3),
+    6: _parse_art([
+        "     ▄██████▄     ",
+        "   ▄█  ▪ °   █▄   ",
+        "  █  ▪         █  ",
+        " █              █ ",
+        " █              █ ",
+        " █            ▫ █ ",
+        "  █          ▫ █  ",
+        "   ▀█      ▫ █▀   ",
+        "     ▀██████▀     ",
+    ], -4),
+    7: _parse_art([
+        "       ▄▄████████▄▄       ",
+        "    ▄▄█   ▪ °      █▄▄    ",
+        "  ▄█   ▪              █▄  ",
+        " █   ·                  █ ",
+        "█                        █",
+        "█                        █",
+        "█                      ▫ █",
+        " █                    ▫ █ ",
+        "  ▀█                ▫ █▀  ",
+        "    ▀▀█          ▫ █▀▀    ",
+        "       ▀▀████████▀▀       ",
+    ], -5),
+}
+
+POP_FRAMES = [
+    [(0, 0, "✦", "glint"), (-3, -1, "·", "body"), (3, -1, "·", "body"), (-3, 1, "·", "body"), (3, 1, "·", "body")],
+    [(-5, -2, ".", "body"), (5, -2, ".", "body"), (0, -3, "·", "body"), (0, 3, "·", "body"), (-4, 2, ".", "body"), (4, 2, ".", "body")],
+]
+
+IN_APP_HELP_LINES = [
+    "╭────────────────── cbubbles — Live Controls & CLI Guide ──────────────────╮",
+    "│                                                                          │",
+    "│  LIVE HOTKEYS                                                            │",
+    "│    + / -  (or ↑ / ↓)   Increase / decrease bubble rising speed           │",
+    "│    ] / [  (or → / ←)   Increase / decrease bubble density                │",
+    "│    z                   Cycle size mode (random/small/medium/large/giant) │",
+    "│    c                   Cycle color palette (rgb/ocean/coral/red/green..) │",
+    "│    m                   Cycle character style (mixed / ascii / pixel)     │",
+    "│    l                   Toggle centered OMARCHY pixel logo                │",
+    "│    p                   Trigger an instant bubble burst from bottom       │",
+    "│    Space               Pause / resume animation (great for screenshots!) │",
+    "│    h / ?               Toggle this help guide                            │",
+    "│    q / Esc             Quit cbubbles                                     │",
+    "│                                                                          │",
+    "│  CLI FLAGS                                                               │",
+    "│    cbubbles -h | --help | help    Print full terminal reference guide    │",
+    "│    -s, --speed MULT               Speed multiplier (0.2 to 4.0)          │",
+    "│    -S, --size MODE                random, small, medium, large, giant,   │",
+    "│                                   or tier range 1-7 (e.g. -S 4-7)        │",
+    "│    -c, --color PALETTE            rgb, ocean, coral, red, green, blue    │",
+    "│    -d, --density COUNT            Simultaneous bubbles (5 to 160)        │",
+    "│    -m, --style STYLE              mixed, ascii, or pixel                 │",
+    "│    -w, --wobble MULT              Horizontal wave sway multiplier        │",
+    "│    -p, --pop RATE                 Mid-water pop rate (0.0 to 1.0)        │",
+    "│    -l, --logo                     Show interactive OMARCHY pixel logo    │",
+    "╰──────────────────────────────────────────────────────────────────────────╯",
+]
+
+
+def print_rich_help() -> None:
+    """Print the formatted truecolor reference guide to stdout."""
+    R = "\033[38;2;255;113;132m"
+    G = "\033[38;2;74;214;154m"
+    B = "\033[38;2;115;163;255m"
+    W = "\033[38;2;248;251;255m"
+    M = "\033[38;2;141;157;180m"
+    BOLD = "\033[1m"
+    RST = "\033[0m"
+
+    guide = f"""{BOLD}{R}c{G}b{B}u{R}b{G}b{B}l{R}e{G}s{RST} — {W}Underwater RGB Bubble ASCII & Pixel Terminal Animation{RST}
+
+{BOLD}{B}USAGE{RST}
+  {G}cbubbles{RST} [options]
+  {G}cbubbles{RST} {M}help | -h | --help{RST}
+
+{BOLD}{B}DEFAULT BEHAVIOR{RST}
+  Running plain {G}cbubbles{RST} uses the signature {R}Red (#FF7184){RST}, {G}Green (#4AD69A){RST}, and
+  {B}Blue (#73A3FF){RST} truecolor palette with randomized bubble dimensions across all
+  {W}7 size tiers{RST} (from tiny micro-bubbles up to 26×11 giant hollow glass spheres).
+
+{BOLD}{B}CLI OPTIONS{RST}
+  {G}-s{RST}, {G}--speed{RST} {W}MULT{RST}       Rising speed multiplier ({M}0.2{RST} slow drift → {M}4.0{RST} rapid boil; default: {W}1.0{RST})
+  {G}-S{RST}, {G}--size{RST} {W}MODE{RST}        Dimension variability (default: {W}random{RST}):
+                           • {W}random{RST}  : all 7 tiers (micro droplets up to giant spheres)
+                           • {W}small{RST}   : tiers 1–2      • {W}medium{RST} : tiers 2–4
+                           • {W}large{RST}   : tiers 4–6      • {W}giant{RST}  : tiers 5–7 (massive glass bubbles)
+                           • {W}1-7{RST}     : custom tier range (e.g. {G}-S 3-7{RST} or single tier {G}-S 7{RST})
+  {G}-c{RST}, {G}--color{RST} {W}PALETTE{RST}    Color palette (default: {W}rgb{RST}):
+                           • {W}rgb{RST} ({R}Red{RST}+{G}Green{RST}+{B}Blue{RST})  • {W}ocean{RST} (Blue+Green+Cyan)  • {W}coral{RST} (Red+Magenta+Blue)
+                           • {W}red{RST}, {W}green{RST}, {W}blue{RST}, {W}mono{RST}, or custom comma list (e.g. {G}-c red,blue{RST})
+  {G}-d{RST}, {G}--density{RST} {W}COUNT{RST}    Number of simultaneous bubbles on screen ({M}5{RST} to {M}160{RST}; default: {W}35{RST})
+  {G}-m{RST}, {G}--style{RST} {W}STYLE{RST}      Character aesthetic: {W}mixed{RST} (rounded + glints), {W}ascii{RST}, or {W}pixel{RST} (default: {W}mixed{RST})
+  {G}-w{RST}, {G}--wobble{RST} {W}MULT{RST}      Horizontal underwater sway/turbulence ({M}0.0{RST} to {M}3.0{RST}; default: {W}1.0{RST})
+  {G}-p{RST}, {G}--pop{RST} {W}RATE{RST}         Mid-water bubble pop frequency ({M}0.0{RST} to {M}1.0{RST}; default: {W}0.25{RST})
+  {G}-l{RST}, {G}--logo{RST}             Show centered pixelated {W}OMARCHY{RST} wordmark that dynamically tints
+                         as RGB bubbles pass through it (3-layer parallax depth)
+  {G}-f{RST}, {G}--fps{RST} {W}FPS{RST}          Target frame rate ({M}10{RST} to {M}60{RST}; default: {W}30{RST})
+  {G}-h{RST}, {G}--help{RST}             Show this help guide and exit
+
+{BOLD}{B}LIVE INTERACTIVE HOTKEYS (WHILE RUNNING){RST}
+  {W}+ / -{RST} (or {W}↑ / ↓{RST})       Increase / decrease bubble {W}speed{RST}
+  {W}] / [{RST} (or {W}→ / ←{RST})       Increase / decrease bubble {W}density{RST}
+  {W}z{RST}                      Cycle {W}size modes{RST} ({M}random → small → medium → large → giant{RST})
+  {W}c{RST}                      Cycle {W}color palettes{RST} ({M}rgb → ocean → coral → red → green → blue → mono{RST})
+  {W}m{RST}                      Cycle {W}character style{RST} ({M}mixed → ascii → pixel{RST})
+  {W}l{RST}                      Toggle centered {W}OMARCHY pixel logo{RST} on/off
+  {W}p{RST}                      Trigger an instant {W}bubble burst{RST} wave from the bottom
+  {W}Space{RST}                  {W}Pause / resume{RST} animation (perfect for capturing screenshots)
+  {W}h / ?{RST}                  Toggle in-app {W}Help Guide overlay{RST}
+  {W}q / Esc{RST}                Quit
+
+{BOLD}{B}EXAMPLES{RST}
+  {G}cbubbles{RST}                          Standard RGB Bubble animation (tiers 1–7)
+  {G}cbubbles -l{RST}                       With interactive centered OMARCHY pixel logo
+  {G}cbubbles -S giant -d 20{RST}           Extra-large & giant hollow glass spheres
+  {G}cbubbles -s 1.5 -c ocean -m pixel{RST} Fast pixel-art bubbles in ocean palette
+"""
+    sys.stdout.write(guide)
+    sys.stdout.flush()
+
+
+def parse_size_tiers(size_arg: str) -> list[int]:
+    val = size_arg.strip().lower()
+    if val == "random":
+        return [1, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 7]
+    if val == "small":
+        return [1, 1, 2]
+    if val == "medium":
+        return [2, 3, 3, 4]
+    if val == "large":
+        return [4, 5, 5, 6]
+    if val in ("giant", "xlarge", "xl"):
+        return [5, 6, 6, 7, 7]
+    if "-" in val:
+        parts = val.split("-", 1)
+        try:
+            lo = max(1, min(7, int(parts[0])))
+            hi = max(1, min(7, int(parts[1])))
+            if lo > hi:
+                lo, hi = hi, lo
+            return list(range(lo, hi + 1))
+        except ValueError:
+            pass
+    try:
+        single = max(1, min(7, int(val)))
+        return [single]
+    except ValueError:
+        return [1, 1, 2, 3, 4, 5, 6, 7]
+
+
+def parse_color_keys(color_arg: str) -> list[str]:
+    val = color_arg.strip().lower()
+    if val in PALETTES:
+        return PALETTES[val]
+    keys = [k.strip() for k in val.split(",") if k.strip() in THEME_COLORS]
+    return keys if keys else PALETTES["rgb"]
+
+
+class Bubble:
+    def __init__(self, width: int, height: int, tiers: list[int], color_keys: list[str], style: str, spawn_y: float | None = None):
+        self.tier = random.choice(tiers)
+        self.color_key = random.choice(color_keys)
+        self.max_w = {1: 2, 2: 4, 3: 6, 4: 10, 5: 13, 6: 19, 7: 27}[self.tier]
+        self.x_base = random.uniform(2, max(4, width - self.max_w - 2))
+        self.y = spawn_y if spawn_y is not None else random.uniform(height + 2, height + 10)
+        base_speed = 2.5 + self.tier * 0.72 + random.uniform(-0.5, 0.6)
+        self.vy = base_speed
+        # Per-bubble independent horizontal drift + dual-harmonic wave oscillation
+        self.vx = random.uniform(-2.4, 2.4)
+        self.phase1 = random.uniform(0, math.tau)
+        self.phase2 = random.uniform(0, math.tau)
+        self.freq1 = random.uniform(0.9, 2.6)
+        self.freq2 = random.uniform(2.0, 4.3)
+        self.amp1 = random.uniform(1.4, 5.8) / max(1.0, self.tier * 0.22)
+        self.amp2 = random.uniform(0.5, 2.4) / max(1.0, self.tier * 0.25)
+        self.x = self.x_base
+        self.micro_char = random.choice([".", "·", "°", "∘", "o", "O"] if style != "pixel" else ["·", "▪", "▫", "▀", "▄"])
+        self.popping = -1
+        self.pop_timer = 0.0
+
+    @property
+    def radius_cols(self) -> float:
+        return {1: 1.5, 2: 2.5, 3: 4.0, 4: 6.0, 5: 8.0, 6: 11.0, 7: 14.5}[self.tier]
+
+    @property
+    def center(self) -> tuple[float, float]:
+        offsets = {1: (0, 0), 2: (1, 0), 3: (2.5, 0), 4: (4, 0), 5: (6, 0), 6: (8.5, 0), 7: (12.5, 0)}
+        ox, oy = offsets[self.tier]
+        return (self.x + ox, self.y + oy)
+
+    def update(self, dt: float, t: float, speed_mult: float, wobble_mult: float, pop_prob: float, width: int, height: int) -> bool:
+        if self.popping >= 0:
+            self.pop_timer += dt
+            if self.pop_timer > 0.08:
+                self.pop_timer = 0.0
+                self.popping += 1
+            return self.popping < len(POP_FRAMES)
+
+        self.y -= self.vy * speed_mult * dt
+
+        # Subtle per-bubble lateral current shift + dual-wave sway
+        self.vx = max(-3.2, min(3.2, self.vx + random.uniform(-1.8, 1.8) * dt))
+        self.x_base += self.vx * wobble_mult * dt
+
+        # Softly reverse horizontal drift near terminal edges
+        max_x = max(3.0, float(width - self.max_w - 2))
+        if self.x_base < 2.0:
+            self.x_base = 2.0
+            self.vx = abs(self.vx) * 0.8
+        elif self.x_base > max_x:
+            self.x_base = max_x
+            self.vx = -abs(self.vx) * 0.8
+
+        sway = (
+            math.sin(t * self.freq1 + self.phase1) * self.amp1
+            + math.cos(t * self.freq2 + self.phase2) * self.amp2
+        ) * wobble_mult
+        self.x = max(0.0, min(float(max(1, width - self.max_w)), self.x_base + sway))
+
+        if self.y < 2.0 or (self.y < height * 0.75 and random.random() < pop_prob * 0.011 * speed_mult):
+            if self.tier >= 2 and random.random() < 0.75:
+                self.popping = 0
+                self.pop_timer = 0.0
+                return True
+            return False
+        return self.y > -8
+
+
+def build_omarchy_halfblock_logo() -> list[tuple[int, int, str]]:
+    """Convert the 81x19 pixel grid into a crisp 81x10 half-block (▀/▄/█) logo."""
+    H = len(OMARCHY_GRID_ROWS)
+    W = len(OMARCHY_GRID_ROWS[0])
+    cells = []
+    for row_pair in range(0, H, 2):
+        out_y = row_pair // 2
+        for x in range(W):
+            top = OMARCHY_GRID_ROWS[row_pair][x] == "#"
+            bot = (OMARCHY_GRID_ROWS[row_pair + 1][x] == "#") if (row_pair + 1 < H) else False
+            if top and bot:
+                cells.append((x, out_y, "█"))
+            elif top:
+                cells.append((x, out_y, "▀"))
+            elif bot:
+                cells.append((x, out_y, "▄"))
+    return cells
+
+
+def run_animation(args: argparse.Namespace) -> None:
+    speed_mult = max(0.1, float(args.speed))
+    density = max(3, min(200, int(args.density)))
+    wobble_mult = max(0.0, float(args.wobble))
+    pop_prob = max(0.0, min(2.0, float(args.pop)))
+    fps = max(10, min(60, int(args.fps)))
+    size_mode = args.size
+    tiers = parse_size_tiers(size_mode)
+    color_arg = args.color
+    color_keys = parse_color_keys(color_arg)
+    style = args.style if args.style in STYLE_MODES else "mixed"
+    show_logo = bool(args.logo)
+    show_help_overlay = False
+    paused = False
+
+    halfblock_logo = build_omarchy_halfblock_logo()
+
+    stdscr = curses.initscr()
+    curses.noecho()
+    curses.cbreak()
+    stdscr.keypad(True)
+    stdscr.nodelay(True)
+    try:
+        curses.curs_set(0)
+    except curses.error:
+        pass
+
+    sys.stdout.write("\033[?1049h\033[?25l\033[2J")
+    sys.stdout.flush()
+
+    def cleanup_terminal(*_):
+        sys.stdout.write("\033[0m\033[?25h\033[?1049l")
+        sys.stdout.flush()
+        try:
+            curses.endwin()
+        except curses.error:
+            pass
+        sys.exit(0)
+
+    signal.signal(signal.SIGINT, cleanup_terminal)
+    signal.signal(signal.SIGTERM, cleanup_terminal)
+
+    height, width = stdscr.getmaxyx()
+    bubbles: list[Bubble] = []
+    for _ in range(density):
+        b = Bubble(width, height, tiers, color_keys, style, spawn_y=random.uniform(2, max(4, height)))
+        b.x = b.x_base
+        bubbles.append(b)
+
+    t0 = time.monotonic()
+    last_time = t0
+    hud_until = t0 + 3.5
+
+    try:
+        while True:
+            now = time.monotonic()
+            dt = min(0.1, now - last_time)
+            last_time = now
+            t = now - t0
+
+            new_h, new_w = stdscr.getmaxyx()
+            if (new_h, new_w) != (height, width):
+                height, width = new_h, new_w
+                sys.stdout.write("\033[2J")
+
+            while True:
+                ch = stdscr.getch()
+                if ch == -1:
+                    break
+                if ch in (ord("q"), ord("Q"), 27):
+                    cleanup_terminal()
+                elif ch in (ord("h"), ord("H"), ord("?")):
+                    show_help_overlay = not show_help_overlay
+                    hud_until = now + 3.0
+                elif ch == ord(" "):
+                    if show_help_overlay:
+                        show_help_overlay = False
+                    else:
+                        paused = not paused
+                    hud_until = now + 2.5
+                elif ch in (ord("+"), ord("="), curses.KEY_UP):
+                    speed_mult = min(4.0, round(speed_mult + 0.2, 2))
+                    hud_until = now + 2.5
+                elif ch in (ord("-"), ord("_"), curses.KEY_DOWN):
+                    speed_mult = max(0.2, round(speed_mult - 0.2, 2))
+                    hud_until = now + 2.5
+                elif ch in (ord("]"), curses.KEY_RIGHT):
+                    density = min(160, density + 5)
+                    hud_until = now + 2.5
+                elif ch in (ord("["), curses.KEY_LEFT):
+                    density = max(5, density - 5)
+                    hud_until = now + 2.5
+                elif ch in (ord("c"), ord("C")):
+                    idx = (PALETTE_CYCLE.index(color_arg) + 1) % len(PALETTE_CYCLE) if color_arg in PALETTE_CYCLE else 0
+                    color_arg = PALETTE_CYCLE[idx]
+                    color_keys = parse_color_keys(color_arg)
+                    for b in bubbles:
+                        b.color_key = random.choice(color_keys)
+                    hud_until = now + 2.5
+                elif ch in (ord("z"), ord("Z")):
+                    idx = (SIZE_MODES.index(size_mode) + 1) % len(SIZE_MODES) if size_mode in SIZE_MODES else 0
+                    size_mode = SIZE_MODES[idx]
+                    tiers = parse_size_tiers(size_mode)
+                    # Re-roll a few bubbles immediately so the size change is visible right away
+                    for b in bubbles[::2]:
+                        b.tier = random.choice(tiers)
+                    hud_until = now + 2.5
+                elif ch in (ord("m"), ord("M")):
+                    idx = (STYLE_MODES.index(style) + 1) % len(STYLE_MODES)
+                    style = STYLE_MODES[idx]
+                    hud_until = now + 2.5
+                elif ch in (ord("l"), ord("L")):
+                    show_logo = not show_logo
+                    hud_until = now + 2.5
+                elif ch in (ord("p"), ord("P")):
+                    for _ in range(12):
+                        nb = Bubble(width, height, tiers, color_keys, style, spawn_y=height - 1)
+                        nb.x = nb.x_base
+                        bubbles.append(nb)
+
+            if not paused:
+                alive: list[Bubble] = []
+                for b in bubbles:
+                    if b.update(dt, t, speed_mult, wobble_mult, pop_prob, width, height):
+                        alive.append(b)
+                bubbles = alive
+
+                while len(bubbles) < density:
+                    nb = Bubble(width, height, tiers, color_keys, style, spawn_y=random.uniform(height, height + 6))
+                    nb.x = nb.x_base
+                    bubbles.append(nb)
+
+            canvas: dict[tuple[int, int], tuple[str, tuple[int, int, int]]] = {}
+
+            templates = (
+                ASCII_TEMPLATES if style == "ascii"
+                else PIXEL_TEMPLATES if style == "pixel"
+                else MIXED_TEMPLATES
+            )
+
+            def draw_bubble(b: Bubble):
+                base_rgb, bright_rgb = THEME_COLORS[b.color_key]
+                glint_rgb = THEME_COLORS["white"][1]
+                bx = int(round(b.x))
+                by = int(round(b.y))
+
+                if b.popping >= 0:
+                    frame = POP_FRAMES[min(b.popping, len(POP_FRAMES) - 1)]
+                    cx, cy = int(round(b.center[0])), int(round(b.center[1]))
+                    for dx, dy, ch_str, role in frame:
+                        px, py = cx + dx, cy + dy
+                        if 0 <= px < width and 0 <= py < height - 1:
+                            canvas[(px, py)] = (ch_str, bright_rgb if role == "glint" else base_rgb)
+                    return
+
+                if b.tier == 1:
+                    if 0 <= bx < width and 0 <= by < height - 1:
+                        canvas[(bx, by)] = (b.micro_char, base_rgb)
+                    return
+
+                tpl = templates[b.tier]
+                for dx, dy, ch_str, role in tpl:
+                    px, py = bx + dx, by + dy
+                    if 0 <= px < width and 0 <= py < height - 1:
+                        rgb = glint_rgb if role == "glint" else (bright_rgb if role == "rim" else base_rgb)
+                        canvas[(px, py)] = (ch_str, rgb)
+
+            # 1. Background bubbles (tiers 1-3)
+            for b in bubbles:
+                if b.tier <= 3:
+                    draw_bubble(b)
+
+            # 2. Centered OMARCHY pixel logo if enabled
+            if show_logo:
+                if width >= 85 and height >= 14:
+                    lx0 = (width - 81) // 2
+                    ly0 = (height - 10) // 2
+                    for gx, gy, ch_str in halfblock_logo:
+                        px, py = lx0 + gx, ly0 + gy
+                        if not (0 <= px < width and 0 <= py < height - 1):
+                            continue
+                        chosen_rgb = None
+                        for b in bubbles:
+                            if b.tier >= 2:
+                                cx, cy = b.center
+                                dist = math.hypot((px - cx) * 0.55, py - cy)
+                                r = b.radius_cols * 0.65
+                                if dist <= r:
+                                    base_rgb, bright_rgb = THEME_COLORS[b.color_key]
+                                    chosen_rgb = bright_rgb if abs(dist - r) < 0.75 else base_rgb
+                                    break
+                        if chosen_rgb is None:
+                            band_key = color_keys[((gx // 6) + (gy // 2)) % len(color_keys)]
+                            chosen_rgb = THEME_COLORS[band_key][0]
+                        canvas[(px, py)] = (ch_str, chosen_rgb)
+                elif width >= 46 and height >= 6:
+                    lx0 = (width - len(COMPACT_LOGO_ROWS[0])) // 2
+                    ly0 = (height - len(COMPACT_LOGO_ROWS)) // 2
+                    for ry, row_str in enumerate(COMPACT_LOGO_ROWS):
+                        for rx, ch_str in enumerate(row_str):
+                            if ch_str == " ":
+                                continue
+                            px, py = lx0 + rx, ly0 + ry
+                            band_key = color_keys[((rx // 6) + ry) % len(color_keys)]
+                            canvas[(px, py)] = (ch_str, THEME_COLORS[band_key][0])
+
+            # 3. Foreground large & giant hollow glass bubbles (tiers 4-7)
+            for b in bubbles:
+                if b.tier >= 4:
+                    draw_bubble(b)
+
+            # 4. In-app Help Overlay if toggled with 'h' or '?'
+            if show_help_overlay:
+                box_h = len(IN_APP_HELP_LINES)
+                box_w = len(IN_APP_HELP_LINES[0])
+                hx0 = max(0, (width - box_w) // 2)
+                hy0 = max(0, (height - 1 - box_h) // 2)
+                border_rgb = THEME_COLORS["blue"][0]
+                title_rgb = THEME_COLORS["green"][1]
+                text_rgb = THEME_COLORS["white"][0]
+                for ry, line in enumerate(IN_APP_HELP_LINES):
+                    py = hy0 + ry
+                    if not (0 <= py < height - 1):
+                        continue
+                    for rx, ch_str in enumerate(line):
+                        px = hx0 + rx
+                        if not (0 <= px < width):
+                            continue
+                        if ry in (0, box_h - 1) or rx in (0, box_w - 1):
+                            rgb = border_rgb
+                        elif ry in (2, 14):
+                            rgb = title_rgb
+                        else:
+                            rgb = text_rgb
+                        canvas[(px, py)] = (ch_str, rgb)
+
+            out = ["\033[H"]
+            last_rgb = None
+            for y in range(height - 1):
+                line_parts = []
+                for x in range(width):
+                    cell = canvas.get((x, y))
+                    if cell is None:
+                        line_parts.append(" ")
+                    else:
+                        ch_str, rgb = cell
+                        if rgb != last_rgb:
+                            line_parts.append(f"\033[38;2;{rgb[0]};{rgb[1]};{rgb[2]}m")
+                            last_rgb = rgb
+                        line_parts.append(ch_str)
+                out.append("".join(line_parts))
+                if y < height - 2:
+                    out.append("\r\n")
+
+            if now < hud_until or show_help_overlay:
+                hud = (
+                    f" cbubbles | [h] help | [q] quit | spd:{speed_mult:.1f}x(+/-) "
+                    f"| den:{density}([/]) | sz:{size_mode}(z) | col:{color_arg}(c) "
+                    f"| sty:{style}(m) | logo:{'on' if show_logo else 'off'}(l) "
+                )[: max(1, width - 1)]
+                out.append(f"\r\n\033[38;2;141;157;180m{hud:<{width - 1}}\033[0m")
+            else:
+                out.append(f"\r\n{' ' * max(0, width - 1)}")
+
+            sys.stdout.write("".join(out))
+            sys.stdout.flush()
+
+            elapsed = time.monotonic() - now
+            sleep_for = max(0.002, (1.0 / fps) - elapsed)
+            time.sleep(sleep_for)
+    finally:
+        cleanup_terminal()
+
+
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        prog="cbubbles",
+        add_help=False,
+    )
+    parser.add_argument("-h", "--help", "-help", action="store_true")
+    parser.add_argument("command", nargs="?", default=None)
+    parser.add_argument("-s", "--speed", type=float, default=1.0)
+    parser.add_argument("-d", "--density", type=int, default=35)
+    parser.add_argument("-S", "--size", default="random")
+    parser.add_argument("-c", "--color", default="rgb")
+    parser.add_argument("-w", "--wobble", type=float, default=1.0)
+    parser.add_argument("-p", "--pop", type=float, default=0.25)
+    parser.add_argument("-m", "--style", choices=STYLE_MODES, default="mixed")
+    parser.add_argument("-l", "--logo", action="store_true")
+    parser.add_argument("-f", "--fps", type=int, default=30)
+    return parser
+
+
+def main() -> None:
+    parsed_args = build_parser().parse_args()
+    if parsed_args.help or (parsed_args.command and parsed_args.command.lower() in ("help", "guide", "info")):
+        print_rich_help()
+        sys.exit(0)
+    run_animation(parsed_args)
+
+
+if __name__ == "__main__":
+    main()

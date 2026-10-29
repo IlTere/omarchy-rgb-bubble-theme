@@ -1,0 +1,14 @@
+# Maintainer: terelux (@IlTere)
+pkgname=cbubbles
+pkgver=1.0.0
+pkgrel=1
+pkgdesc="Underwater RGB Bubble ASCII and pixel terminal animation for Omarchy"
+arch=('any')
+url="https://github.com/IlTere/omarchy-bubble-theme"
+license=('MIT')
+depends=('python')
+
+package() {
+  install -Dm755 "$startdir/../bin/cbubbles" "$pkgdir/usr/bin/cbubbles"
+  install -Dm644 "$startdir/../LICENSE" "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+}

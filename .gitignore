@@ -1,0 +1,28 @@
+# Local archives and handoff exports
+*.zip
+*.tar.gz
+AI_AGENT_HANDOFF.md
+
+# Paused variants and unused app themes (kept locally, not published yet)
+variants/
+app-themes/
+
+# Python and Arch Linux package build artifacts
+build/
+dist/
+*.egg-info/
+__pycache__/
+packaging/pkg/
+packaging/src/
+packaging/*.pkg.tar.*
+
+# Installer and editor backups
+*.bak
+*.bak.*
+*~
+*.swp
+*.swo
+
+# OS metadata
+.DS_Store
+Thumbs.db

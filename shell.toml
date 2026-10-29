@@ -1,0 +1,149 @@
+# RGB Bubble dark shell palette. Translucent midnight surfaces let the
+# floating wallpapers show through while keeping text and controls legible.
+
+[rgb-bubble]
+watermark = "true"
+
+[bar]
+background = "#0A101B"
+background-alpha = 0.14
+text = "#E6F0FF"
+active = "#FF7184"
+size-horizontal = 30
+size-vertical = 32
+
+[hyprland]
+active-border = "rgba(255,113,132,ff) rgba(74,214,154,ff) 38deg"
+active-border-foreground = "rgba(115,163,255,ff) rgba(74,214,154,ff) 38deg"
+
+[controls]
+normal-color = "#AFC9F2"
+normal-fill-alpha = 0.05
+normal-border = "#AFC9F2"
+normal-border-width = 0
+normal-border-alpha = 0
+
+hover-cursor-color = "#4AD69A"
+hover-cursor-fill-alpha = 0.16
+hover-cursor-border = "#4AD69A"
+hover-cursor-border-width = 0
+hover-cursor-border-alpha = 0
+
+focus-color = "accent"
+focus-fill-alpha = 0.18
+focus-border = "accent"
+focus-border-width = 0
+focus-border-alpha = 0
+
+selected-color = "accent"
+selected-fill-alpha = 0.2
+selected-border = "#73A3FF"
+selected-border-width = 0
+selected-border-alpha = 0
+
+pressed-color = "#FF7184"
+pressed-fill-alpha = 0.24
+selection-color = "accent"
+selection-fill-alpha = 0.24
+
+[spacing]
+scale = 1.06
+scale-with-font = true
+
+[font]
+base-size = 12
+
+[popups]
+background = "#0A101B"
+background-alpha = 0.14
+text = "#E6F0FF"
+border = "hyprland.active-border"
+border-alpha = 0
+border-width = 0
+
+[tooltip]
+background = "#0A101B"
+background-alpha = 0.45
+text = "#F8FBFF"
+border = "hyprland.active-border-foreground"
+border-alpha = 0
+border-width = 0
+
+[notifications]
+background = "#0A101B"
+background-alpha = 0.14
+text = "#E6F0FF"
+border = "hyprland.active-border"
+border-alpha = 0
+border-width = 0
+countdown = "#73A3FF"
+
+[launcher]
+background = "#0A101B"
+background-alpha = 0.14
+text = "#E6F0FF"
+border = "hyprland.active-border-foreground"
+border-alpha = 0
+border-width = 0
+scrim = "#04070D"
+scrim-alpha = 0.28
+selected-background = "#73A3FF"
+selected-background-alpha = 0.14
+selected-text = "#F8FBFF"
+selected-border = "#4AD69A"
+selected-border-alpha = 0
+selected-border-width = 0
+
+[menu]
+background = "#0A101B"
+background-alpha = 0.14
+text = "#E6F0FF"
+border = "hyprland.active-border-foreground"
+border-alpha = 0
+border-width = 0
+scrim = "#04070D"
+scrim-alpha = 0.24
+selected-background = "#73A3FF"
+selected-background-alpha = 0.14
+selected-text = "#F8FBFF"
+selected-border = "#4AD69A"
+selected-border-alpha = 0
+selected-border-width = 0
+
+[polkit]
+background = "#0A101B"
+background-alpha = 0.40
+text = "#E6F0FF"
+text-error = "#FF7184"
+border = "hyprland.active-border"
+border-error = "#FF7184"
+border-alpha = 0
+border-width = 0
+scrim = "#04070D"
+scrim-alpha = 0.4
+accent = "#73A3FF"
+
+[lock]
+background = "#0A101B"
+background-alpha = 0.14
+text = "#E6F0FF"
+placeholder = "#8D9DB4"
+text-error = "#FF7184"
+border = "#AFC9F2"
+border-active = "#73A3FF"
+border-error = "#FF7184"
+border-alpha = 0
+border-width = 0
+selection = "#73A3FF"
+selection-alpha = 0.42
+
+[image-picker]
+scrim = "#04070D"
+scrim-alpha = 0.28
+text = "#F8FBFF"
+selected-border = "#73A3FF"
+selected-border-alpha = 0
+selected-border-width = 0
+unselected-border = "#AFC9F2"
+unselected-border-alpha = 0
+unselected-border-width = 0

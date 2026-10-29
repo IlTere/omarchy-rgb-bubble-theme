@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cbubbles"
+version = "1.0.0"
+description = "Underwater RGB Bubble ASCII & pixel terminal animation for Omarchy"
+readme = "README.md"
+license = { file = "LICENSE" }
+authors = [
+  { name = "terelux" }
+]
+requires-python = ">=3.10"
+keywords = ["ascii", "animation", "terminal", "bubbles", "omarchy", "curses"]
+classifiers = [
+  "Environment :: Console :: Curses",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: POSIX :: Linux",
+  "Programming Language :: Python :: 3",
+]
+
+[project.urls]
+Repository = "https://github.com/IlTere/omarchy-bubble-theme"
+
+[tool.setuptools]
+script-files = ["bin/cbubbles"]
+packages = []

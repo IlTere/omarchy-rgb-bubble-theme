@@ -1,17 +1,17 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
-  <rect width="1600" height="900" fill="#F3EFE7"/>
-  <text x="40" y="62" fill="#253439" font-family="DejaVu Sans, sans-serif" font-size="42" font-weight="700">TereTube Theme</text>
-  <text x="42" y="94" fill="#596265" font-family="DejaVu Sans, sans-serif" font-size="18">Light · ink #253439 · burnt orange #AA4B00 · warm ivory #F3EFE7 · wallpaper art generated with ChatGPT by OpenAI</text>
-  <g font-family="DejaVu Sans, sans-serif" font-size="18" fill="#253439">
-    <image href="backgrounds/1-teretube-ink-flow.png" x="40" y="130" width="480" height="300"/>
-    <text x="40" y="460">Ink Flow</text>
-    <image href="backgrounds/2-teretube-ink-strata.png" x="560" y="130" width="480" height="300"/>
-    <text x="560" y="460">Ink Strata</text>
-    <image href="backgrounds/3-teretube-ivory-strata.png" x="1080" y="130" width="480" height="300"/>
-    <text x="1080" y="460">Ivory Strata</text>
-    <image href="backgrounds/4-teretube-ivory-waves.png" x="300" y="500" width="480" height="300"/>
-    <text x="300" y="830">Ivory Waves</text>
-    <image href="backgrounds/5-teretube-geometric.png" x="820" y="500" width="480" height="300"/>
-    <text x="820" y="830">Geometric</text>
-  </g>
+  <defs>
+    <linearGradient id="bg" x2="1" y2="1"><stop stop-color="#101A2B"/><stop offset="1" stop-color="#080D18"/></linearGradient>
+  </defs>
+  <rect width="1600" height="900" fill="url(#bg)"/>
+  <text x="64" y="82" fill="#E6F0FF" font-family="sans-serif" font-size="48" font-weight="700">RGB Bubble</text>
+  <text x="66" y="121" fill="#A8B5C8" font-family="sans-serif" font-size="20">Dark · translucent · weightless</text>
+  <circle cx="1432" cy="86" r="17" fill="#FF7184"/><circle cx="1484" cy="86" r="17" fill="#4AD69A"/><circle cx="1536" cy="86" r="17" fill="#73A3FF"/>
+  <rect x="64" y="164" width="712" height="620" rx="34" fill="#172338" fill-opacity=".62" stroke="#9FB8E8" stroke-opacity=".2" stroke-width="2"/>
+  <image href="backgrounds/02-bubble-float.webp" x="80" y="180" width="680" height="560" preserveAspectRatio="xMidYMid slice"/>
+  <text x="82" y="768" fill="#E6F0FF" font-family="sans-serif" font-size="23">Float</text>
+  <rect x="824" y="164" width="712" height="620" rx="34" fill="#172338" fill-opacity=".62" stroke="#9FB8E8" stroke-opacity=".2" stroke-width="2"/>
+  <image href="backgrounds/01-bubble-omarchy.webp" x="840" y="180" width="680" height="560" preserveAspectRatio="xMidYMid slice"/>
+  <text x="842" y="768" fill="#E6F0FF" font-family="sans-serif" font-size="23">Omarchy in Orbit</text>
+  <circle cx="116" cy="830" r="12" fill="#FF7184" fill-opacity=".85"/><circle cx="151" cy="830" r="12" fill="#4AD69A" fill-opacity=".85"/><circle cx="186" cy="830" r="12" fill="#73A3FF" fill-opacity=".85"/>
+  <text x="218" y="837" fill="#A8B5C8" font-family="sans-serif" font-size="17">Floating glass bubbles · RGB glow · deep night</text>
 </svg>
