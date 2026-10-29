@@ -117,7 +117,6 @@ cbubbles help             # Full CLI reference & interactive keybindings
 - [`icons.theme`](icons.theme) — Yaru-blue icon theme variant
 - [`backgrounds/`](backgrounds/) — 3 WebP RGB glass-bubble and pixel-art wallpapers
 - [`preview.png`](preview.png) — Full-resolution desktop preview (`2560×1600`)
-- [`assets/rgb-bubble.webp`](assets/rgb-bubble.webp) — `1200×675` (`<100 KB`) WebP thumbnail formatted for [omarchy.org/themes](https://omarchy.org/themes/)
 - [`assets/cbubbles-demo.gif`](assets/cbubbles-demo.gif) — Animated GIF demo of `cbubbles`
 - [`install.sh`](install.sh) — Full Experience and modular tweak installer/uninstaller
 - [`hyprland/rgb-bubble.lua`](hyprland/rgb-bubble.lua) — Theme-isolated window opacity, rounded corners, and backdrop blur
@@ -126,21 +125,6 @@ cbubbles help             # Full CLI reference & interactive keybindings
 - [`bin/cbubbles`](bin/cbubbles), [`packaging/PKGBUILD`](packaging/PKGBUILD), [`pyproject.toml`](pyproject.toml) — `cbubbles` CLI and package manifests
 
 See [COMPATIBILITY.md](COMPATIBILITY.md) for the full list of supported applications and [DESIGN.md](DESIGN.md) for palette specifications.
-
----
-
-## Omarchy Site Listing (`omacom/omarchy-site`)
-
-Following the [Omarchy site submission guide](https://github.com/omacom/omarchy-site#adding-your-theme):
-1. Copy [`assets/rgb-bubble.webp`](assets/rgb-bubble.webp) (`1200×675`, 83 KB) into `assets/themes/rgb-bubble.webp` in `omacom/omarchy-site`.
-2. Add this `<figure>` block in alphabetical order in `themes/index.html`:
-
-```html
-<figure class="themes__theme">
-  <a href="https://github.com/IlTere/omarchy-rgb-bubble-theme"><img src="/assets/themes/rgb-bubble.webp" alt="RGB Bubble theme" loading="lazy" decoding="async"></a>
-  <figcaption><a href="https://github.com/IlTere/omarchy-rgb-bubble-theme">RGB Bubble</a></figcaption>
-</figure>
-```
 
 ---
 
