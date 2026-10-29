@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-RGB_BUBBLE_REPOSITORY="${RGB_BUBBLE_REPOSITORY:-https://github.com/IlTere/omarchy-bubble-theme.git}"
+RGB_BUBBLE_REPOSITORY="${RGB_BUBBLE_REPOSITORY:-https://github.com/IlTere/omarchy-rgb-bubble-theme.git}"
 RGB_BUBBLE_BRANCH="${RGB_BUBBLE_BRANCH:-main}"
 RGB_BUBBLE_MODE="${1:-install}"
 RGB_BUBBLE_SOURCE=""
@@ -10,14 +10,29 @@ RGB_BUBBLE_USER="${USER:-$(id -un)}"
 RGB_BUBBLE_THEME="rgb-bubble"
 
 case "$RGB_BUBBLE_MODE" in
-  install|dark|"")
+  install|full|dark|"")
+    RGB_BUBBLE_MODE="install"
+    ;;
+  tweaks|--tweaks)
+    RGB_BUBBLE_MODE="tweaks"
+    ;;
+  hyprland|--hyprland)
+    RGB_BUBBLE_MODE="hyprland"
+    ;;
+  panels|--panels)
+    RGB_BUBBLE_MODE="panels"
+    ;;
+  vim|--vim)
+    RGB_BUBBLE_MODE="vim"
     ;;
   cbubbles|--cbubbles)
+    RGB_BUBBLE_MODE="cbubbles"
     ;;
   uninstall|--uninstall)
+    RGB_BUBBLE_MODE="uninstall"
     ;;
   *)
-    echo "Usage: install.sh [install|cbubbles|uninstall]" >&2
+    echo "Usage: install.sh [install|tweaks|hyprland|panels|vim|cbubbles|uninstall]" >&2
     exit 2
     ;;
 esac
@@ -168,7 +183,7 @@ PY
   echo "Uninstalled RGB Bubble compositor and panel overrides. Theme package in ~/.config/omarchy/themes/rgb-bubble was kept."
 }
 
-if [[ $RGB_BUBBLE_MODE == "uninstall" || $RGB_BUBBLE_MODE == "--uninstall" ]]; then
+if [[ $RGB_BUBBLE_MODE == "uninstall" ]]; then
   uninstall_rgb_bubble
   exit 0
 fi
@@ -180,6 +195,12 @@ if [[ -n ${BASH_SOURCE[0]:-} && -f ${BASH_SOURCE[0]} ]]; then
   fi
 fi
 
+if [[ -z $RGB_BUBBLE_SOURCE && -f $HOME/.config/omarchy/themes/$RGB_BUBBLE_THEME/colors.toml && -f $HOME/.config/omarchy/themes/$RGB_BUBBLE_THEME/hyprland/rgb-bubble.lua ]]; then
+  if [[ $RGB_BUBBLE_MODE != "install" ]]; then
+    RGB_BUBBLE_SOURCE="$HOME/.config/omarchy/themes/$RGB_BUBBLE_THEME"
+  fi
+fi
+
 if [[ -z $RGB_BUBBLE_SOURCE ]]; then
   command -v git >/dev/null || { echo "git is required to download RGB Bubble." >&2; exit 1; }
   RGB_BUBBLE_TEMP=$(mktemp -d)
@@ -187,32 +208,89 @@ if [[ -z $RGB_BUBBLE_SOURCE ]]; then
   RGB_BUBBLE_SOURCE="$RGB_BUBBLE_TEMP/source"
 fi
 
-if [[ $RGB_BUBBLE_MODE == "cbubbles" || $RGB_BUBBLE_MODE == "--cbubbles" ]]; then
+install_cbubbles_tweak() {
   [[ -f $RGB_BUBBLE_SOURCE/bin/cbubbles ]] || { echo "cbubbles binary is missing from the source." >&2; exit 1; }
   mkdir -p "$HOME/.local/bin"
   cp -f -- "$RGB_BUBBLE_SOURCE/bin/cbubbles" "$HOME/.local/bin/cbubbles"
   chmod +x "$HOME/.local/bin/cbubbles"
-  echo "Installed cbubbles to $HOME/.local/bin/cbubbles. Run 'cbubbles' or 'cbubbles help'."
-  exit 0
-fi
+  echo "Installed cbubbles to $HOME/.local/bin/cbubbles. Run 'cbubbles', 'cbubbles -l', or 'cbubbles help'."
+}
 
-[[ -f $RGB_BUBBLE_SOURCE/colors.toml ]] || { echo "Dark theme files are missing from the source." >&2; exit 1; }
-[[ -f $RGB_BUBBLE_SOURCE/hyprland/rgb-bubble.lua ]] || { echo "Hyprland appearance module is missing from the source." >&2; exit 1; }
+install_vim_tweak() {
+  local source="$RGB_BUBBLE_SOURCE/vim/colors/rgb-bubble.vim"
+  local destination="$HOME/.vim/colors/rgb-bubble.vim"
+  local backup
+  [[ -f $source ]] || { echo "Missing Vim colorscheme: $source" >&2; exit 1; }
+  mkdir -p "$(dirname -- "$destination")"
+  if [[ -f $destination ]] && ! cmp -s "$source" "$destination"; then
+    backup="$destination.rgb-bubble.bak.$(date +%Y%m%d%H%M%S)"
+    cp -p -- "$destination" "$backup"
+    echo "Backed up existing Vim colorscheme to $backup"
+  fi
+  cp -f -- "$source" "$destination"
+  echo "Installed Vim colorscheme to $destination (:colorscheme rgb-bubble)."
+}
 
-for RGB_BUBBLE_REQUIRED_FILE in \
-  backgrounds/01-bubble-omarchy.webp \
-  backgrounds/02-bubble-float.webp \
-  backgrounds/03-bubble-omarchy-pixel.webp \
-  bin/cbubbles \
-  panel-qml/BubbleWatermark.qml \
-  vim/colors/rgb-bubble.vim; do
-  [[ -f $RGB_BUBBLE_SOURCE/$RGB_BUBBLE_REQUIRED_FILE ]] || {
-    echo "Required RGB Bubble file is missing: $RGB_BUBBLE_REQUIRED_FILE" >&2
+install_hyprland_tweak() {
+  [[ -f $RGB_BUBBLE_SOURCE/hyprland/rgb-bubble.lua ]] || { echo "Hyprland appearance module is missing from the source." >&2; exit 1; }
+  local hypr_dir="$HOME/.config/hypr"
+  local hyprland_config="$hypr_dir/hyprland.lua"
+  local looknfeel_config="$hypr_dir/looknfeel.lua"
+  [[ -f $hyprland_config && -f $looknfeel_config ]] || {
+    echo "Expected Omarchy Lua config files in $hypr_dir." >&2
     exit 1
   }
-done
 
-command -v omarchy-theme-set >/dev/null || { echo "Run this installer from Omarchy." >&2; exit 1; }
+  local module_file="$hypr_dir/rgb-bubble.lua"
+  if [[ -f $module_file ]] && ! cmp -s "$RGB_BUBBLE_SOURCE/hyprland/rgb-bubble.lua" "$module_file"; then
+    cp -p -- "$module_file" "$module_file.bak.$(date +%Y%m%d%H%M%S)"
+  fi
+  cp -f -- "$RGB_BUBBLE_SOURCE/hyprland/rgb-bubble.lua" "$module_file"
+
+  if ! grep -Fq 'require("hypr.rgb-bubble")' "$hyprland_config"; then
+    cp -p -- "$hyprland_config" "$hyprland_config.bak.rgb-bubble.$(date +%Y%m%d%H%M%S)"
+    cat >>"$hyprland_config" <<'LUA'
+
+-- RGB Bubble rounded glass surfaces, blur, and app opacity.
+require("hypr.rgb-bubble")
+LUA
+  fi
+
+  if grep -Fq 'RGB Bubble: rounded glass surfaces' "$looknfeel_config"; then
+    local looknfeel_backup="$looknfeel_config.bak.rgb-bubble.$(date +%Y%m%d%H%M%S)"
+    cp -p -- "$looknfeel_config" "$looknfeel_backup"
+    python3 - "$looknfeel_config" <<'PY'
+import pathlib, re, sys
+path = pathlib.Path(sys.argv[1])
+text = path.read_text()
+pattern = re.compile(
+    r"-- RGB Bubble: rounded glass surfaces.*?\n"
+    r"hl\.config\(\{\s*decoration = \{.*?\},\s*\}\)\s*\n*"
+    r"(?:-- Blur Omarchy's translucent Quickshell surfaces.*?\n"
+    r"hl\.layer_rule\(\{.*?\}\)\s*\n*)?",
+    re.DOTALL,
+)
+replacement = """-- hl.config({
+--   decoration = {
+--     -- Use round window corners.
+--     rounding = 8,
+--
+--     -- Dim unfocused windows (0.0 = no dim, 1.0 = fully dimmed).
+--     dim_inactive = true,
+--     dim_strength = 0.15,
+--   },
+-- })
+"""
+updated = pattern.sub(replacement, text)
+if updated != text:
+    path.write_text(updated)
+PY
+    echo "Migrated legacy unscoped RGB Bubble block out of $looknfeel_config (backup: $looknfeel_backup)"
+  fi
+
+  echo "Installed theme-isolated Hyprland frosted-glass window opacity, blur, and rounding ($module_file)."
+}
+
 RGB_BUBBLE_SKIPPED_PLUGINS=()
 
 record_skipped_plugin() {
@@ -222,59 +300,6 @@ record_skipped_plugin() {
   done
   RGB_BUBBLE_SKIPPED_PLUGINS+=("$source_id")
 }
-
-install_theme_files() {
-  local source_dir="$1" destination="$2" entry name
-  mkdir -p "$destination"
-  for entry in "$source_dir"/*; do
-    [[ -e $entry ]] || continue
-    name=${entry##*/}
-    case "$name" in
-      .git|.gitignore|install.sh|variants|hyprland|app-themes|vim|panel-qml|packaging|pyproject.toml|AI_AGENT_HANDOFF.md|RGB-Bubble-project-export.zip)
-        continue
-        ;;
-    esac
-    cp -a -- "$entry" "$destination/"
-  done
-}
-
-install_theme_files "$RGB_BUBBLE_SOURCE" "$HOME/.config/omarchy/themes/rgb-bubble"
-
-remove_obsolete_backgrounds() {
-  local theme_dir="$1" file_name path
-  for file_name in \
-    1-teretube-ink-flow.png \
-    2-teretube-ink-strata.png \
-    3-teretube-ivory-strata.png \
-    4-teretube-ivory-waves.png \
-    5-teretube-geometric.png \
-    01-bubble-float.webp \
-    02-bubble-omarchy.webp \
-    01-bubble-drift.webp \
-    01-bubble-float.png \
-    02-bubble-omarchy.png \
-    01-bubble-drift.png; do
-    path="$theme_dir/backgrounds/$file_name"
-    if [[ -f $path ]]; then
-      rm -- "$path"
-      echo "Removed obsolete wallpaper $path"
-    fi
-  done
-}
-remove_obsolete_backgrounds "$HOME/.config/omarchy/themes/rgb-bubble"
-
-remove_legacy_split_overrides() {
-  local theme_dir="$1" override backup
-  shopt -s nullglob
-  for override in "$theme_dir"/shell.*.toml; do
-    backup="$override.bak.$(date +%Y%m%d%H%M%S)"
-    cp -p -- "$override" "$backup"
-    rm -- "$override"
-    echo "Moved obsolete split override to $backup"
-  done
-  shopt -u nullglob
-}
-remove_legacy_split_overrides "$HOME/.config/omarchy/themes/rgb-bubble"
 
 ensure_shell_clone() {
   local source_id="$1"
@@ -328,16 +353,6 @@ else:
 path.write_text(updated)
 PY
   echo "Updated theme-isolated QML override in $qml_file; backup: $backup"
-}
-
-install_watermark_asset() {
-  local source="$1" destination="$2" backup
-  mkdir -p "$(dirname -- "$destination")"
-  if [[ -f $destination ]] && ! cmp -s "$source" "$destination"; then
-    backup="$destination.rgb-bubble.bak.$(date +%Y%m%d%H%M%S)"
-    cp -p -- "$destination" "$backup"
-  fi
-  cp -f -- "$source" "$destination"
 }
 
 install_bar_watermark() {
@@ -397,45 +412,38 @@ for plugin in root.iterdir():
 PYTHON
 }
 
-# Only omarchy.osd and omarchy.bar need user-owned clones; all other panels
-# inherit shell.toml [popups], [notifications], [menu], and [polkit] natively.
-# Every QML override is gated on Commons.Color.shellValues["rgb-bubble.watermark"] === "true"
-# so switching to any other Omarchy theme keeps stock appearance 100% intact.
-if ensure_shell_clone omarchy.osd; then
-  patch_qml_theme_scoped \
-    "$HOME/.config/omarchy/plugins/$RGB_BUBBLE_USER.osd/Osd.qml" \
-    'color: Util.alpha(Commons.Color.background, 0.97)' \
-    'color: Commons.Color.popups.background' \
-    'color: Commons.Color.shellValues["rgb-bubble.watermark"] === "true" ? Commons.Color.popups.background : Util.alpha(Commons.Color.background, 0.97)'
-fi
+install_panels_tweak() {
+  [[ -f $RGB_BUBBLE_SOURCE/panel-qml/BubbleWatermark.qml ]] || { echo "Top-bar watermark QML is missing from the source." >&2; exit 1; }
+  if ensure_shell_clone omarchy.osd; then
+    patch_qml_theme_scoped \
+      "$HOME/.config/omarchy/plugins/$RGB_BUBBLE_USER.osd/Osd.qml" \
+      'color: Util.alpha(Commons.Color.background, 0.97)' \
+      'color: Commons.Color.popups.background' \
+      'color: Commons.Color.shellValues["rgb-bubble.watermark"] === "true" ? Commons.Color.popups.background : Util.alpha(Commons.Color.background, 0.97)'
+  fi
 
-if ensure_shell_clone omarchy.bar; then
-  patch_qml_theme_scoped \
-    "$HOME/.config/omarchy/plugins/$RGB_BUBBLE_USER.bar/Bar.qml" \
-    'borderSpec: Border.flat(root.barForeground, 1)' \
-    'borderSpec: Border.none()' \
-    'borderSpec: Commons.Color.shellValues["rgb-bubble.watermark"] === "true" ? Border.none() : Border.flat(root.barForeground, 1)'
-fi
+  if ensure_shell_clone omarchy.bar; then
+    patch_qml_theme_scoped \
+      "$HOME/.config/omarchy/plugins/$RGB_BUBBLE_USER.bar/Bar.qml" \
+      'borderSpec: Border.flat(root.barForeground, 1)' \
+      'borderSpec: Border.none()' \
+      'borderSpec: Commons.Color.shellValues["rgb-bubble.watermark"] === "true" ? Border.none() : Border.flat(root.barForeground, 1)'
+  fi
 
-# If the user already has a Tailscale plugin clone, scope its popup background
-# to RGB Bubble as well (do not force-clone omarchy.tailscale, as cloning
-# auto-enables the widget on the top bar).
-if [[ -f $HOME/.config/omarchy/plugins/$RGB_BUBBLE_USER.tailscale/Panel.qml ]]; then
-  patch_qml_theme_scoped \
-    "$HOME/.config/omarchy/plugins/$RGB_BUBBLE_USER.tailscale/Panel.qml" \
-    'color: Commons.Color.background' \
-    'color: Commons.Color.popups.background' \
-    'color: Commons.Color.shellValues["rgb-bubble.watermark"] === "true" ? Commons.Color.popups.background : Commons.Color.background'
-fi
+  if [[ -f $HOME/.config/omarchy/plugins/$RGB_BUBBLE_USER.tailscale/Panel.qml ]]; then
+    patch_qml_theme_scoped \
+      "$HOME/.config/omarchy/plugins/$RGB_BUBBLE_USER.tailscale/Panel.qml" \
+      'color: Commons.Color.background' \
+      'color: Commons.Color.popups.background' \
+      'color: Commons.Color.shellValues["rgb-bubble.watermark"] === "true" ? Commons.Color.popups.background : Commons.Color.background'
+  fi
 
-install_bar_watermark
-remove_other_panel_watermarks
+  install_bar_watermark
+  remove_other_panel_watermarks
 
-# Ensure the stock Omarchy menu remains active if an older install cloned it.
-# Do not strip other user widgets (such as Dropbox or Tailscale) from shell.json.
-RGB_BUBBLE_SHELL_CONFIG="$HOME/.config/omarchy/shell.json"
-if [[ -f $RGB_BUBBLE_SHELL_CONFIG ]]; then
-  python3 - "$RGB_BUBBLE_SHELL_CONFIG" "$RGB_BUBBLE_USER" <<'PY'
+  local shell_config="$HOME/.config/omarchy/shell.json"
+  if [[ -f $shell_config ]]; then
+    python3 - "$shell_config" "$RGB_BUBBLE_USER" <<'PY'
 import json
 import pathlib
 import shutil
@@ -487,83 +495,119 @@ if restored:
     path.write_text(json.dumps(data, indent=2) + "\n")
     print(f"Restored the stock Omarchy menu in {path}; backup: {backup}")
 PY
-fi
-
-install_app_theme() {
-  local source="$1" destination="$2" backup
-  [[ -f $source ]] || { echo "Missing app theme: $source" >&2; return 1; }
-  mkdir -p "$(dirname -- "$destination")"
-  if [[ -f $destination ]] && ! cmp -s "$source" "$destination"; then
-    backup="$destination.rgb-bubble.bak.$(date +%Y%m%d%H%M%S)"
-    cp -p -- "$destination" "$backup"
-    echo "Backed up existing app theme to $backup"
   fi
-  cp -f -- "$source" "$destination"
+
+  echo "Installed theme-isolated top-bar vector bubble watermark and translucent OSD override."
 }
 
-install_app_theme "$RGB_BUBBLE_SOURCE/vim/colors/rgb-bubble.vim" \
-  "$HOME/.vim/colors/rgb-bubble.vim"
+case "$RGB_BUBBLE_MODE" in
+  cbubbles)
+    install_cbubbles_tweak
+    exit 0
+    ;;
+  vim)
+    install_vim_tweak
+    exit 0
+    ;;
+  hyprland)
+    install_hyprland_tweak
+    reload_desktop_session
+    exit 0
+    ;;
+  panels)
+    install_panels_tweak
+    reload_desktop_session
+    exit 0
+    ;;
+  tweaks)
+    install_panels_tweak
+    install_vim_tweak
+    install_cbubbles_tweak
+    install_hyprland_tweak
+    reload_desktop_session
+    echo "Installed all RGB Bubble extra tweaks (Hyprland frosted glass, top-bar watermark, Vim colorscheme, and cbubbles)."
+    exit 0
+    ;;
+esac
 
-mkdir -p "$HOME/.local/bin"
-cp -f -- "$RGB_BUBBLE_SOURCE/bin/cbubbles" "$HOME/.local/bin/cbubbles"
-chmod +x "$HOME/.local/bin/cbubbles"
+[[ -f $RGB_BUBBLE_SOURCE/colors.toml ]] || { echo "Dark theme files are missing from the source." >&2; exit 1; }
+[[ -f $RGB_BUBBLE_SOURCE/hyprland/rgb-bubble.lua ]] || { echo "Hyprland appearance module is missing from the source." >&2; exit 1; }
 
-RGB_BUBBLE_HYPR_DIR="$HOME/.config/hypr"
-RGB_BUBBLE_HYPRLAND_CONFIG="$RGB_BUBBLE_HYPR_DIR/hyprland.lua"
-RGB_BUBBLE_LOOKNFEEL_CONFIG="$RGB_BUBBLE_HYPR_DIR/looknfeel.lua"
-[[ -f $RGB_BUBBLE_HYPRLAND_CONFIG && -f $RGB_BUBBLE_LOOKNFEEL_CONFIG ]] || {
-  echo "Expected Omarchy Lua config files in $RGB_BUBBLE_HYPR_DIR." >&2
-  exit 1
+for RGB_BUBBLE_REQUIRED_FILE in \
+  backgrounds/01-bubble-omarchy.webp \
+  backgrounds/02-bubble-float.webp \
+  backgrounds/03-bubble-omarchy-pixel.webp \
+  bin/cbubbles \
+  panel-qml/BubbleWatermark.qml \
+  vim/colors/rgb-bubble.vim; do
+  [[ -f $RGB_BUBBLE_SOURCE/$RGB_BUBBLE_REQUIRED_FILE ]] || {
+    echo "Required RGB Bubble file is missing: $RGB_BUBBLE_REQUIRED_FILE" >&2
+    exit 1
+  }
+done
+
+command -v omarchy-theme-set >/dev/null || { echo "Run this installer from Omarchy." >&2; exit 1; }
+
+install_theme_files() {
+  local source_dir="$1" destination="$2" entry name
+  mkdir -p "$destination"
+  if [[ $(realpath -m "$source_dir") == $(realpath -m "$destination") ]]; then
+    return 0
+  fi
+  for entry in "$source_dir"/*; do
+    [[ -e $entry ]] || continue
+    name=${entry##*/}
+    case "$name" in
+      .git|.gitignore|variants|app-themes|packaging|pyproject.toml|AI_AGENT_HANDOFF.md|RGB-Bubble-project-export.zip)
+        continue
+        ;;
+    esac
+    cp -a -- "$entry" "$destination/"
+  done
 }
 
-RGB_BUBBLE_MODULE="$RGB_BUBBLE_HYPR_DIR/rgb-bubble.lua"
-if [[ -f $RGB_BUBBLE_MODULE ]] && ! cmp -s "$RGB_BUBBLE_SOURCE/hyprland/rgb-bubble.lua" "$RGB_BUBBLE_MODULE"; then
-  cp -p -- "$RGB_BUBBLE_MODULE" "$RGB_BUBBLE_MODULE.bak.$(date +%Y%m%d%H%M%S)"
-fi
-cp -f -- "$RGB_BUBBLE_SOURCE/hyprland/rgb-bubble.lua" "$RGB_BUBBLE_MODULE"
+install_theme_files "$RGB_BUBBLE_SOURCE" "$HOME/.config/omarchy/themes/rgb-bubble"
 
-if ! grep -Fq 'require("hypr.rgb-bubble")' "$RGB_BUBBLE_HYPRLAND_CONFIG"; then
-  cp -p -- "$RGB_BUBBLE_HYPRLAND_CONFIG" "$RGB_BUBBLE_HYPRLAND_CONFIG.bak.rgb-bubble.$(date +%Y%m%d%H%M%S)"
-  cat >>"$RGB_BUBBLE_HYPRLAND_CONFIG" <<'LUA'
+remove_obsolete_backgrounds() {
+  local theme_dir="$1" file_name path
+  for file_name in \
+    1-teretube-ink-flow.png \
+    2-teretube-ink-strata.png \
+    3-teretube-ivory-strata.png \
+    4-teretube-ivory-waves.png \
+    5-teretube-geometric.png \
+    01-bubble-float.webp \
+    02-bubble-omarchy.webp \
+    01-bubble-drift.webp \
+    01-bubble-float.png \
+    02-bubble-omarchy.png \
+    01-bubble-drift.png; do
+    path="$theme_dir/backgrounds/$file_name"
+    if [[ -f $path ]]; then
+      rm -- "$path"
+      echo "Removed obsolete wallpaper $path"
+    fi
+  done
+}
+remove_obsolete_backgrounds "$HOME/.config/omarchy/themes/rgb-bubble"
 
--- RGB Bubble rounded glass surfaces, blur, and app opacity.
-require("hypr.rgb-bubble")
-LUA
-fi
+remove_legacy_split_overrides() {
+  local theme_dir="$1" override backup
+  shopt -s nullglob
+  for override in "$theme_dir"/shell.*.toml; do
+    backup="$override.bak.$(date +%Y%m%d%H%M%S)"
+    cp -p -- "$override" "$backup"
+    rm -- "$override"
+    echo "Moved obsolete split override to $backup"
+  done
+  shopt -u nullglob
+}
+remove_legacy_split_overrides "$HOME/.config/omarchy/themes/rgb-bubble"
 
-# Clean up any legacy unscoped RGB Bubble block that older installers placed
-# directly inside looknfeel.lua so other Omarchy themes stay 100% isolated.
-if grep -Fq 'RGB Bubble: rounded glass surfaces' "$RGB_BUBBLE_LOOKNFEEL_CONFIG"; then
-  RGB_BUBBLE_LOOKNFEEL_BACKUP="$RGB_BUBBLE_LOOKNFEEL_CONFIG.bak.rgb-bubble.$(date +%Y%m%d%H%M%S)"
-  cp -p -- "$RGB_BUBBLE_LOOKNFEEL_CONFIG" "$RGB_BUBBLE_LOOKNFEEL_BACKUP"
-  python3 - "$RGB_BUBBLE_LOOKNFEEL_CONFIG" <<'PY'
-import pathlib, re, sys
-path = pathlib.Path(sys.argv[1])
-text = path.read_text()
-pattern = re.compile(
-    r"-- RGB Bubble: rounded glass surfaces.*?\n"
-    r"hl\.config\(\{\s*decoration = \{.*?\},\s*\}\)\s*\n*"
-    r"(?:-- Blur Omarchy's translucent Quickshell surfaces.*?\n"
-    r"hl\.layer_rule\(\{.*?\}\)\s*\n*)?",
-    re.DOTALL,
-)
-replacement = """-- hl.config({
---   decoration = {
---     -- Use round window corners.
---     rounding = 8,
---
---     -- Dim unfocused windows (0.0 = no dim, 1.0 = fully dimmed).
---     dim_inactive = true,
---     dim_strength = 0.15,
---   },
--- })
-"""
-updated = pattern.sub(replacement, text)
-if updated != text:
-    path.write_text(updated)
-PY
-  echo "Migrated legacy unscoped RGB Bubble block out of $RGB_BUBBLE_LOOKNFEEL_CONFIG (backup: $RGB_BUBBLE_LOOKNFEEL_BACKUP)"
-fi
+install_panels_tweak
+install_vim_tweak
+install_cbubbles_tweak
+install_hyprland_tweak
 
 if ! omarchy-theme-set "$RGB_BUBBLE_THEME"; then
   echo "Files are installed, but Omarchy could not activate $RGB_BUBBLE_THEME. Run omarchy-theme-set $RGB_BUBBLE_THEME in your desktop session." >&2
