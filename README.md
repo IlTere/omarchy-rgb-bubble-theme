@@ -1,10 +1,10 @@
 # RGB Bubble
 
-A dark, translucent Omarchy theme by **@terelux** featuring midnight glass surfaces and vivid Coral Red, Mint Green, and Sky Blue accents.
+Throw yourself into the mysterious underwater world of Omarchy with this dark, translucent, bubbly theme developed by **@terelux**. Midnight surfaces, a vivid red/green/blue palette, and a glass look and feel.
 
 ![RGB Bubble Desktop Preview](preview.png)
 
-> Independent community theme for [Omarchy](https://omarchy.org/).
+This is an independent community theme for Omarchy. It is not affiliated with Bubble or an official Omarchy release.
 
 ---
 
