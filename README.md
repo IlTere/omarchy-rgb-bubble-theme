@@ -4,7 +4,7 @@ Throw yourself into the mysterious underwater world of Omarchy with this dark, t
 
 ![RGB Bubble Desktop Preview](preview.png)
 
-This is an independent community theme for Omarchy. It is not affiliated with Bubble or an official Omarchy release.
+This is an independent community theme for Omarchy. It is not affiliated with an official Omarchy release.
 
 ---
 
