@@ -13,6 +13,5 @@ RGB Bubble should make the desktop feel weightless: dark surfaces sit behind flo
 
 ## References
 
-- [Bubble visual guidelines](https://bubble.io/brand) use filled and stroked, rounded bubble forms as part of their visual language. This theme uses generic bubble shapes and is not affiliated with Bubble.
 - [Frosted glass UI guide](https://akanoodles.com/thinking/reference/glassmorphism) describes translucent rounded panels, visible background color, and soft light edges as the ingredients of a glass surface.
 - [Glassmorphism accessibility and usage](https://webcapitan.com/blog/glassmorphism-ui-design-guide/) recommends keeping text readable, limiting nested glass layers, and reserving transparency for a small number of surfaces.
