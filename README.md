@@ -130,4 +130,4 @@ See [COMPATIBILITY.md](COMPATIBILITY.md) for the full list of supported applicat
 
 ## Credits & License
 
-Released under the [MIT License](LICENSE). See [CREDITS.md](CREDITS.md) for artwork provenance notes.
+Released under the [CC0 1.0 Universal](LICENSE). See [CREDITS.md](CREDITS.md) for artwork provenance notes.
