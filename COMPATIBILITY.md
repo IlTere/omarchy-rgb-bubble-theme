@@ -7,7 +7,7 @@ The palette was resolved with Omarchy **4.0.6-1**. That install's generated them
 - **Desktop and Omarchy shell:** Hyprland borders and preview/share picker; the Quickshell bar, menus, notifications, OSD, lock screen, polkit prompts, and controls; and Gum prompts.
 - **Terminals (full ANSI palette + transparent glass window):** Alacritty, Foot, Ghostty, Kitty, and TUI apps (`btop`, `yazi`, `cliamp`, `aether`).
 - **Editors and coding tools (palette + transparent glass window):** Neovim, Vim (`:colorscheme rgb-bubble`), Helix, VS Code, Obsidian, Omawrite, Tensaku, Hermes, Pi, and T3 Code.
-- **System utilities and file managers (transparent glass window):** Nautilus, file picker portals, LocalSend, Disk Usage, Calculator (`omacalc`), and Spotify.
+- **System utilities and file managers (transparent glass window):** Nautilus, Yazi, file picker portals, LocalSend, Disk Usage, Calculator (`omacalc`), and Spotify.
 - **Browsers, web apps, media & document viewers (kept 100% opaque for readability):** Chromium (`chromium.theme` still styles the browser chrome), Firefox, Qutebrowser, installed web apps (Discord, WhatsApp, YouTube, Google Photos/Maps/Messages/Contacts, Basecamp), video/streaming apps (`mpv`, `vlc`, Kdenlive, OBS Studio, Omacut), and image/document viewers (`imv`, Pinta, Xournal++, Evince, Papers, LibreOffice).
 - **Hardware:** Keyboard RGB palette.
 - **AeroFyl:** not installed by the theme installer. If its VS Code language extension is installed separately, the Omarchy-generated VS Code theme provides the editor colors.
