@@ -7,7 +7,6 @@
 - `backgrounds/03-bubble-omarchy-pixel.webp` and `assets/omarchy-wordmark-bubble-pixel.svg`: minimalist 2560×1600 centered Omarchy pixel-grid wordmark intersected by distinct Red, Green, and Blue pixel-stepped bubbles over a deep midnight backdrop.
 - `assets/omarchy-wordmark-bubble.svg`: recolored vector artwork of the Omarchy wordmark supplied by @terelux for this theme.
 - `panel-qml/bubble-watermark.png`: transparent 3072×3072 irregular RGB glass-bubble watermark generated with ChatGPT by OpenAI at the direction of @terelux. The installer uses this static PNG for Quickshell panels.
-- `panel-qml/bubble-watermark.svg`: an earlier hand-drawn concept by @terelux; it is not used by the installer.
 
 Suggested credit: **“RGB Bubble by @terelux; wallpaper artwork generated with ChatGPT by OpenAI.”** This is a provenance note, not an endorsement or affiliation claim.
 
