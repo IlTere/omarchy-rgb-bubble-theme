@@ -1,7 +1,8 @@
 # Credits and provenance
 
 - Theme direction, palette, art direction, and curation: **@terelux**.
-- `backgrounds/02-bubble-float.webp`: original abstract wallpaper generated with [ChatGPT](https://chatgpt.com/) by [OpenAI](https://openai.com/), at the direction of @terelux. It is encoded as high-quality WebP at its native 1586×992 resolution for faster loading.
+- All backgrounds included in the theme are AI Generated using Gemini Argon 4 Model (https://aistudio.google.com/docs/models/gemini-4-argon?hl=it) by Google.
+- `backgrounds/02-bubble-float.webp`: original abstract wallpaper it is encoded as high-quality WebP at its native 1586×992 resolution for faster loading.
 - `backgrounds/01-bubble-omarchy.webp`: the default wallpaper, with the Omarchy wordmark centered over the generated bubble artwork, encoded as high-quality WebP at 2560×1600. `backgrounds/02-bubble-float.webp` keeps the same artwork without the wordmark.
 - `backgrounds/03-bubble-omarchy-pixel.webp` and `assets/omarchy-wordmark-bubble-pixel.svg`: minimalist 2560×1600 centered Omarchy pixel-grid wordmark intersected by distinct Red, Green, and Blue pixel-stepped bubbles over a deep midnight backdrop.
 - `assets/omarchy-wordmark-bubble.svg`: recolored vector artwork of the Omarchy wordmark supplied by @terelux for this theme.
@@ -10,4 +11,4 @@
 
 Suggested credit: **“RGB Bubble by @terelux; wallpaper artwork generated with ChatGPT by OpenAI.”** This is a provenance note, not an endorsement or affiliation claim.
 
-OpenAI's [Terms of Use](https://openai.com/en-GB/policies/row-terms-of-use/) assign output ownership between the user and OpenAI subject to applicable law and place responsibility for use on the user. Omarchy is the target platform; this is an independent community theme.
+Google's [Terms of Use](https://aistudio.google.com/docs/terms?hl=en) assign output ownership between the user and Google subject to applicable law and place responsibility for use on the user. Omarchy is the target platform; this is an independent community theme.
