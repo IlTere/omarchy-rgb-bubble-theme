@@ -126,7 +126,7 @@ user = sys.argv[2]
 bar_qml = root / f"{user}.bar" / "Bar.qml"
 if bar_qml.is_file():
     text = bar_qml.read_text()
-    updated = re.sub(r"(?m)^\s*BubbleWatermark\s*\{[^}]*\}\s*\n?", "", text)
+    updated = re.sub(r"(?m)^[ \t]*BubbleWatermark[ \t]*\{[^}\n]*\}[ \t]*\n?", "", text)
     updated = updated.replace(
         'borderSpec: Commons.Color.shellValues["rgb-bubble.watermark"] === "true" ? Border.none() : Border.flat(root.barForeground, 1)',
         "borderSpec: Border.flat(root.barForeground, 1)",
@@ -209,7 +209,7 @@ if [[ -z $RGB_BUBBLE_SOURCE ]]; then
 fi
 
 install_cbubbles_tweak() {
-  [[ -f $RGB_BUBBLE_SOURCE/bin/cbubbles ]] || { echo "cbubbles binary is missing from the source." >&2; exit 1; }
+  [[ -f $RGB_BUBBLE_SOURCE/bin/cbubbles ]] || { echo "cbubbles binary is missing from the source." >&2; return 1; }
   mkdir -p "$HOME/.local/bin"
   cp -f -- "$RGB_BUBBLE_SOURCE/bin/cbubbles" "$HOME/.local/bin/cbubbles"
   chmod +x "$HOME/.local/bin/cbubbles"
@@ -220,7 +220,7 @@ install_vim_tweak() {
   local source="$RGB_BUBBLE_SOURCE/vim/colors/rgb-bubble.vim"
   local destination="$HOME/.vim/colors/rgb-bubble.vim"
   local backup
-  [[ -f $source ]] || { echo "Missing Vim colorscheme: $source" >&2; exit 1; }
+  [[ -f $source ]] || { echo "Missing Vim colorscheme: $source" >&2; return 1; }
   mkdir -p "$(dirname -- "$destination")"
   if [[ -f $destination ]] && ! cmp -s "$source" "$destination"; then
     backup="$destination.rgb-bubble.bak.$(date +%Y%m%d%H%M%S)"
@@ -232,13 +232,13 @@ install_vim_tweak() {
 }
 
 install_hyprland_tweak() {
-  [[ -f $RGB_BUBBLE_SOURCE/hyprland/rgb-bubble.lua ]] || { echo "Hyprland appearance module is missing from the source." >&2; exit 1; }
+  [[ -f $RGB_BUBBLE_SOURCE/hyprland/rgb-bubble.lua ]] || { echo "Hyprland appearance module is missing from the source." >&2; return 1; }
   local hypr_dir="$HOME/.config/hypr"
   local hyprland_config="$hypr_dir/hyprland.lua"
   local looknfeel_config="$hypr_dir/looknfeel.lua"
   [[ -f $hyprland_config && -f $looknfeel_config ]] || {
     echo "Expected Omarchy Lua config files in $hypr_dir." >&2
-    exit 1
+    return 1
   }
 
   local module_file="$hypr_dir/rgb-bubble.lua"
@@ -370,20 +370,33 @@ install_bar_watermark() {
   cp -f -- "$component_source" "$component_dest"
   rm -f -- "$clone_dir/bubble-watermark.png"
   grep -Fq 'BubbleWatermark { anchors.fill: parent }' "$qml_file" && return 0
-  original=$'    color: root.transparent ? "transparent" : root.background\n    surfaceFormat.opaque: false'
-  replacement=$'    color: root.transparent ? "transparent" : root.background\n    BubbleWatermark { anchors.fill: parent }\n    surfaceFormat.opaque: false'
-  grep -Fq "$original" "$qml_file" || { echo "Unsupported top bar QML; watermark not inserted." >&2; return 1; }
   backup="$qml_file.rgb-bubble.bak.$(date +%Y%m%d%H%M%S)"
   cp -p -- "$qml_file" "$backup"
-  python3 - "$qml_file" "$original" "$replacement" <<'PYTHON'
-import pathlib, sys
+  # Match the bar surface's color line followed by surfaceFormat.opaque,
+  # tolerating any indentation (and repairing it if an older uninstall
+  # stripped the leading spaces from the surfaceFormat line).
+  if ! python3 - "$qml_file" <<'PYTHON'
+import pathlib, re, sys
 path = pathlib.Path(sys.argv[1])
 text = path.read_text()
-old, new = sys.argv[2], sys.argv[3]
-if text.count(old) != 1:
-    raise SystemExit(f"Expected one top bar insertion point in {path}; no change made")
-path.write_text(text.replace(old, new, 1))
+pattern = re.compile(
+    r'(?m)^([ \t]*)(color: root\.transparent \? "transparent" : root\.background)[ \t]*\n'
+    r'[ \t]*(surfaceFormat\.opaque: false)'
+)
+matches = pattern.findall(text)
+if len(matches) != 1:
+    sys.stderr.write(f"Expected one top bar insertion point in {path}, found {len(matches)}; no change made\n")
+    sys.exit(1)
+def insert(m):
+    indent = m.group(1)
+    return f"{indent}{m.group(2)}\n{indent}BubbleWatermark {{ anchors.fill: parent }}\n{indent}{m.group(3)}"
+path.write_text(pattern.sub(insert, text, count=1))
 PYTHON
+  then
+    rm -f -- "$backup"
+    echo "Unsupported top bar QML; watermark not inserted." >&2
+    return 1
+  fi
   echo "Added the RGB Bubble watermark to the top bar; backup: $backup"
 }
 
@@ -399,7 +412,7 @@ for plugin in root.iterdir():
         continue
     for qml in plugin.rglob("*.qml"):
         text = qml.read_text(errors="replace")
-        updated = re.sub(r"(?m)^\s*BubbleWatermark\s*\{[^}]*\}\s*\n?", "", text)
+        updated = re.sub(r"(?m)^[ \t]*BubbleWatermark[ \t]*\{[^}\n]*\}[ \t]*\n?", "", text)
         if updated != text:
             backup = qml.with_name(qml.name + ".rgb-bubble.bak." + time.strftime("%Y%m%d%H%M%S"))
             shutil.copy2(qml, backup)
@@ -413,7 +426,7 @@ PYTHON
 }
 
 install_panels_tweak() {
-  [[ -f $RGB_BUBBLE_SOURCE/panel-qml/BubbleWatermark.qml ]] || { echo "Top-bar watermark QML is missing from the source." >&2; exit 1; }
+  [[ -f $RGB_BUBBLE_SOURCE/panel-qml/BubbleWatermark.qml ]] || { echo "Top-bar watermark QML is missing from the source." >&2; return 1; }
   if ensure_shell_clone omarchy.osd; then
     patch_qml_theme_scoped \
       "$HOME/.config/omarchy/plugins/$RGB_BUBBLE_USER.osd/Osd.qml" \
@@ -438,8 +451,9 @@ install_panels_tweak() {
       'color: Commons.Color.shellValues["rgb-bubble.watermark"] === "true" ? Commons.Color.popups.background : Commons.Color.background'
   fi
 
-  install_bar_watermark
-  remove_other_panel_watermarks
+  local panels_status=0
+  install_bar_watermark || panels_status=1
+  remove_other_panel_watermarks || true
 
   local shell_config="$HOME/.config/omarchy/shell.json"
   if [[ -f $shell_config ]]; then
@@ -497,34 +511,64 @@ if restored:
 PY
   fi
 
+  if ((panels_status != 0)); then
+    echo "Top-bar watermark could not be installed; translucent OSD override was still applied." >&2
+    return 1
+  fi
   echo "Installed theme-isolated top-bar vector bubble watermark and translucent OSD override."
+}
+
+RGB_BUBBLE_FAILED_TWEAKS=()
+
+# Run one tweak without letting its failure abort the remaining ones.
+run_tweak() {
+  local name="$1"
+  shift
+  if ! "$@"; then
+    RGB_BUBBLE_FAILED_TWEAKS+=("$name")
+  fi
+}
+
+report_failed_tweaks() {
+  if ((${#RGB_BUBBLE_FAILED_TWEAKS[@]} > 0)); then
+    printf 'Some RGB Bubble tweaks did not install: %s\n' "${RGB_BUBBLE_FAILED_TWEAKS[*]}" >&2
+    echo "Everything else was installed. Rerun after fixing the messages above, or open an issue on GitHub." >&2
+    return 1
+  fi
+}
+
+install_all_tweaks() {
+  run_tweak cbubbles install_cbubbles_tweak
+  run_tweak vim install_vim_tweak
+  run_tweak hyprland install_hyprland_tweak
+  run_tweak panels install_panels_tweak
 }
 
 case "$RGB_BUBBLE_MODE" in
   cbubbles)
     install_cbubbles_tweak
-    exit 0
+    exit $?
     ;;
   vim)
     install_vim_tweak
-    exit 0
+    exit $?
     ;;
   hyprland)
-    install_hyprland_tweak
+    run_tweak hyprland install_hyprland_tweak
     reload_desktop_session
-    exit 0
+    report_failed_tweaks
+    exit $?
     ;;
   panels)
-    install_panels_tweak
+    run_tweak panels install_panels_tweak
     reload_desktop_session
-    exit 0
+    report_failed_tweaks
+    exit $?
     ;;
   tweaks)
-    install_panels_tweak
-    install_vim_tweak
-    install_cbubbles_tweak
-    install_hyprland_tweak
+    install_all_tweaks
     reload_desktop_session
+    report_failed_tweaks || exit 1
     echo "Installed all RGB Bubble extra tweaks (Hyprland frosted glass, top-bar watermark, Vim colorscheme, and cbubbles)."
     exit 0
     ;;
@@ -604,10 +648,7 @@ remove_legacy_split_overrides() {
 }
 remove_legacy_split_overrides "$HOME/.config/omarchy/themes/rgb-bubble"
 
-install_panels_tweak
-install_vim_tweak
-install_cbubbles_tweak
-install_hyprland_tweak
+install_all_tweaks
 
 if ! omarchy-theme-set "$RGB_BUBBLE_THEME"; then
   echo "Files are installed, but Omarchy could not activate $RGB_BUBBLE_THEME. Run omarchy-theme-set $RGB_BUBBLE_THEME in your desktop session." >&2
@@ -629,5 +670,7 @@ echo "Color themes & transparent window apps: Alacritty, Foot, Ghostty, Kitty, V
 echo "Terminal bubble animation command: run 'cbubbles' (or 'cbubbles -l' for the interactive Omarchy pixel logo, 'cbubbles --help' for all flags)."
 
 reload_desktop_session
+
+report_failed_tweaks || true
 
 echo "Selected $RGB_BUBBLE_THEME."
