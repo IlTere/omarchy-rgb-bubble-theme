@@ -52,15 +52,15 @@ hl.config({
 
     shadow = {
       enabled = true,
-      range = 24,
-      render_power = 3,
-      color = "rgba(03071190)",
-      offset = { 0, 8 },
+      range = 4,
+      render_power = 1,
+      color = "rgba(00000020)",
+      offset = { 0, 1 },
     },
 
     blur = {
       enabled = true,
-      size = 8,
+      size = 30,
       passes = 2,
       ignore_opacity = true,
       new_optimizations = true,
@@ -81,7 +81,7 @@ hl.layer_rule({
   },
   blur = true,
   blur_popups = true,
-  ignore_alpha = 0.12,
+  ignore_alpha = 0.10,
 })
 
 -- Apply the translucent glass treatment to non-fullscreen app windows by default

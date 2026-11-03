@@ -22,7 +22,7 @@ omarchy theme install https://github.com/IlTere/omarchy-rgb-bubble-theme.git
 
 #### What is included with `omarchy theme install`:
 - **Midnight RGB App Palette (`colors.toml`):** Automatically generates matching themes for Alacritty, Foot, Ghostty, Kitty, Neovim, Helix, VS Code, `btop`, Obsidian, Hermes, Pi, and T3 Code.
-- **Translucent Omarchy Shell (`shell.toml`):** 14% surface opacity (86% transparency) across the Omarchy top bar, launcher menu, notifications, clipboard, emoji picker, calendar/clock, audio, Bluetooth, display, Wi-Fi/network, battery/power, agent usage, weather, and reminder popups (and 40% opacity on authentication prompts for readability).
+- **Translucent Omarchy Shell (`shell.toml`):** 14% surface opacity (86% transparency) across the Omarchy top bar, launcher menu, notifications, clipboard, emoji picker, calendar/clock, audio, Bluetooth, display, Wi-Fi/network, battery/power, agent usage, weather, reminders, and authentication prompts, edged with a thin light border and almost no drop shadow while preserving accessibility principles.
 - **Browser & Icon Styling (`chromium.theme` & `icons.theme`):** Deep-navy Chromium frame and Yaru-blue icons.
 - **3 Custom Wallpapers (`backgrounds/`):**
   1. `01-bubble-omarchy.webp` — Centered RGB glass-bubble Omarchy wordmark *(default)*
@@ -46,7 +46,7 @@ curl -fsSL https://raw.githubusercontent.com/IlTere/omarchy-rgb-bubble-theme/mai
 - **Hyprland Frosted-Glass Windows (`hyprland/rgb-bubble.lua`):**
   - **90% focused / 95% unfocused opacity** (10% / 5% transparency) for terminals, code editors (Vim, Neovim, Helix, VS Code), notes (Obsidian), file managers (Nautilus), and system utilities (`btop`, Spotify).
   - **100% opaque exclusions** for browsers, web apps, video/media players, games, image/document/PDF viewers, Office apps, Picture-in-Picture, and fullscreen windows.
-  - **2-pass backdrop blur** (`size = 8`, `ignore_opacity = true`, `vibrancy = 0.28`) and rounded window corners (`rounding = 14`).
+  - **2-pass backdrop blur** (`size = 30`, `ignore_opacity = true`, `vibrancy = 0.28`) with almost no drop shadow (`range = 4`, `render_power = 1`) and rounded window corners (`rounding = 22`).
   - **100% theme-isolated:** Automatically disables itself when you switch to any other Omarchy theme.
 - **Top-Bar Vector Bubble Watermark & Translucent OSD (`panel-qml/BubbleWatermark.qml`):**
   - Pure-vector QML RGB glass bubbles in the top bar and translucent OSD volume/brightness popups (strictly gated on `rgb-bubble` so other themes remain untouched).

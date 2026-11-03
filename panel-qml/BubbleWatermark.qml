@@ -16,6 +16,17 @@ Item {
   readonly property real unit: Math.min(width, height)
   readonly property bool enabledForTheme: Commons.Color.shellValues["rgb-bubble.watermark"] === "true"
 
+  // Thin light boundary along the bottom of the bar
+  Rectangle {
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.bottom: parent.bottom
+    height: 1
+    color: "#E6F0FF"
+    opacity: 0.22
+    visible: root.enabledForTheme
+  }
+
   Repeater {
     model: root.enabledForTheme ? [
       { x: 0.04, y: 0.16, s: 0.34, c: "#FF7184" },
