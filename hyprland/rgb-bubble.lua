@@ -77,7 +77,7 @@ hl.config({
 
 hl.layer_rule({
   match = {
-    namespace = "^omarchy-(bar|menu|image-selector|emojis|clipboard|keyboard-panel|osd|notifications|polkit|lock-preview|reminders|network-qr|network-speedtest|disk-speedtest|speed-test)$",
+    namespace = "^omarchy-(bar|image-selector|emojis|clipboard|keyboard-panel|osd|notifications|polkit|lock-preview|reminders|network-qr|network-speedtest|disk-speedtest|speed-test)$",
   },
   blur = true,
   blur_popups = true,
