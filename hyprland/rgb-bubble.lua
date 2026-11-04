@@ -81,7 +81,7 @@ hl.layer_rule({
   },
   blur = true,
   blur_popups = true,
-  ignore_alpha = 0.05,
+  ignore_alpha = 0.10,
 })
 
 -- Apply the translucent glass treatment to non-fullscreen app windows by default
