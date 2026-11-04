@@ -665,7 +665,7 @@ echo "Installed RGB Bubble dark theme, app palettes, translucent system panels, 
 echo "Panel opacity: 14% surface opacity via shell.toml across Omarchy bar, menus, notifications, popups, and dialogs, edged with a thin light border and almost no drop shadow."
 echo "Bubble watermark: top bar only, and strictly isolated to RGB Bubble."
 echo "App window opacity (90% focused / 95% unfocused — 10% / 5% transparency): terminals, editors, notes, file managers, and system utilities when RGB Bubble is active (browsers, web apps, media/video players, image/PDF viewers, Office apps, PiP, and fullscreen windows remain 100% opaque)."
-echo "Backdrop blur: size 8 with 2 passes, ignore_opacity enabled, and 0.28 vibrancy (active only in RGB Bubble)."
+echo "Backdrop blur: size 10 with 4 passes, ignore_opacity enabled, and 0.28 vibrancy (active only in RGB Bubble)."
 echo "Color themes & transparent window apps: Alacritty, Foot, Ghostty, Kitty, Vim, Neovim, Helix, VS Code, btop, Chromium, Obsidian, Hermes, Pi, and T3 Code."
 echo "Terminal bubble animation command: run 'cbubbles' (or 'cbubbles -l' for the interactive Omarchy pixel logo, 'cbubbles --help' for all flags)."
 

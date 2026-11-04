@@ -88,10 +88,10 @@ border-width = 1
 scrim = "#04070D"
 scrim-alpha = 0
 selected-background = "#73A3FF"
-selected-background-alpha = 0.16
+selected-background-alpha = 0.14
 selected-text = "#F8FBFF"
-selected-border = "#73A3FF"
-selected-border-alpha = 0.60
+selected-border = "#FF7184 #4AD69A #73A3FF 45deg"
+selected-border-alpha = 0.85
 selected-border-width = 1
 
 [menu]
@@ -104,10 +104,10 @@ border-width = 1
 scrim = "#04070D"
 scrim-alpha = 0
 selected-background = "#73A3FF"
-selected-background-alpha = 0.16
+selected-background-alpha = 0.14
 selected-text = "#F8FBFF"
-selected-border = "#73A3FF"
-selected-border-alpha = 0.60
+selected-border = "#FF7184 #4AD69A #73A3FF 45deg"
+selected-border-alpha = 0.85
 selected-border-width = 1
 
 [polkit]
