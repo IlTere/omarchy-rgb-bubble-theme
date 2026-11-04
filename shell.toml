@@ -23,9 +23,9 @@ normal-border = "#E6F0FF"
 normal-border-width = 1
 normal-border-alpha = 0.18
 
-hover-cursor-color = "#4AD69A"
+hover-cursor-color = "#73A3FF"
 hover-cursor-fill-alpha = 0.16
-hover-cursor-border = "#4AD69A"
+hover-cursor-border = "#73A3FF"
 hover-cursor-border-width = 1
 hover-cursor-border-alpha = 0.35
 
@@ -86,12 +86,12 @@ border = "#E6F0FF"
 border-alpha = 0.28
 border-width = 1
 scrim = "#04070D"
-scrim-alpha = 0.28
+scrim-alpha = 0.20
 selected-background = "#73A3FF"
-selected-background-alpha = 0.14
+selected-background-alpha = 0.16
 selected-text = "#F8FBFF"
-selected-border = "#4AD69A"
-selected-border-alpha = 0.40
+selected-border = "#73A3FF"
+selected-border-alpha = 0.60
 selected-border-width = 1
 
 [menu]
@@ -102,12 +102,12 @@ border = "#E6F0FF"
 border-alpha = 0.28
 border-width = 1
 scrim = "#04070D"
-scrim-alpha = 0.24
+scrim-alpha = 0.20
 selected-background = "#73A3FF"
-selected-background-alpha = 0.14
+selected-background-alpha = 0.16
 selected-text = "#F8FBFF"
-selected-border = "#4AD69A"
-selected-border-alpha = 0.40
+selected-border = "#73A3FF"
+selected-border-alpha = 0.60
 selected-border-width = 1
 
 [polkit]
