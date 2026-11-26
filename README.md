@@ -64,13 +64,17 @@ If you already installed the theme via `omarchy theme install https://github.com
 ```sh
 # Install ALL extra tweaks (Hyprland glass + top-bar watermark + cbubbles + Vim colorscheme)
 bash ~/.config/omarchy/themes/rgb-bubble/install.sh tweaks
+```
 
+```sh
 # Or install individual tweaks:
 bash ~/.config/omarchy/themes/rgb-bubble/install.sh hyprland   # Hyprland window opacity, blur & rounding only
 bash ~/.config/omarchy/themes/rgb-bubble/install.sh panels     # Top-bar bubble watermark & OSD override only
 bash ~/.config/omarchy/themes/rgb-bubble/install.sh cbubbles   # cbubbles terminal animation CLI only
 bash ~/.config/omarchy/themes/rgb-bubble/install.sh vim        # Vim colorscheme only
+```
 
+```sh
 # Cleanly remove all extra tweaks while keeping the base theme installed:
 bash ~/.config/omarchy/themes/rgb-bubble/install.sh uninstall
 ```
