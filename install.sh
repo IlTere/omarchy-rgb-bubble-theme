@@ -111,6 +111,22 @@ PY
     echo "Removed $module_file"
   fi
 
+  python3 - "$HOME/.config/gtk-3.0/gtk.css" "$HOME/.config/gtk-4.0/gtk.css" <<'PY'
+import pathlib, re, sys
+
+pattern = re.compile(r"\s*/\* BEGIN RGB BUBBLE GLASS \*/.*?/\* END RGB BUBBLE GLASS \*/\s*", re.S)
+for arg in sys.argv[1:]:
+    path = pathlib.Path(arg)
+    if path.is_file():
+        text = path.read_text()
+        updated = pattern.sub("\n", text).strip()
+        if updated != text.strip():
+            path.write_text((updated + "\n") if updated else "")
+PY
+  systemctl --user unset-environment GDK_WAYLAND_DISABLE >/dev/null 2>&1 || true
+  dbus-update-activation-environment --systemd GDK_WAYLAND_DISABLE= >/dev/null 2>&1 || true
+  systemctl --user try-restart xdg-desktop-portal-gtk.service >/dev/null 2>&1 || true
+
   if [[ -f $HOME/.local/bin/cbubbles ]]; then
     rm -f -- "$HOME/.local/bin/cbubbles"
     echo "Removed $HOME/.local/bin/cbubbles"
