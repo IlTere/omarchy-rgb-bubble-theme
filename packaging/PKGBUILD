@@ -5,10 +5,17 @@ pkgrel=1
 pkgdesc="Underwater RGB Bubble ASCII and pixel terminal animation for Omarchy"
 arch=('any')
 url="https://github.com/IlTere/omarchy-rgb-bubble-theme"
-license=('MIT')
+license=('CC0-1.0')
 depends=('python')
 
 package() {
-  install -Dm755 "$startdir/../bin/cbubbles" "$pkgdir/usr/bin/cbubbles"
-  install -Dm644 "$startdir/../LICENSE" "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+  if [[ -f "$startdir/../bin/cbubbles" && -f "$startdir/../LICENSE" ]]; then
+    install -Dm755 "$startdir/../bin/cbubbles" "$pkgdir/usr/bin/cbubbles"
+    install -Dm644 "$startdir/../LICENSE" "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+  else
+    curl -fsSL "$url/raw/main/bin/cbubbles" -o "$srcdir/cbubbles"
+    curl -fsSL "$url/raw/main/LICENSE" -o "$srcdir/LICENSE"
+    install -Dm755 "$srcdir/cbubbles" "$pkgdir/usr/bin/cbubbles"
+    install -Dm644 "$srcdir/LICENSE" "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+  fi
 }

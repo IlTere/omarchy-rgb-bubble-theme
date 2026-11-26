@@ -24,5 +24,4 @@ classifiers = [
 Repository = "https://github.com/IlTere/omarchy-rgb-bubble-theme"
 
 [tool.setuptools]
-script-files = ["bin/cbubbles"]
 packages = []

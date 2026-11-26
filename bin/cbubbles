@@ -738,6 +738,17 @@ def run_animation(args: argparse.Namespace) -> None:
         cleanup_terminal()
 
 
+def parse_density(value: str) -> int:
+    val = str(value).strip().lower()
+    named = {"low": 20, "medium": 35, "med": 35, "high": 65}
+    if val in named:
+        return named[val]
+    try:
+        return max(5, min(160, int(val)))
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError(f"invalid density value: {value!r}") from exc
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="cbubbles",
@@ -746,12 +757,12 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("-h", "--help", "-help", action="store_true")
     parser.add_argument("command", nargs="?", default=None)
     parser.add_argument("-s", "--speed", type=float, default=1.0)
-    parser.add_argument("-d", "--density", type=int, default=35)
+    parser.add_argument("-d", "--density", type=parse_density, default=35)
     parser.add_argument("-S", "--size", default="random")
     parser.add_argument("-c", "--color", default="rgb")
     parser.add_argument("-w", "--wobble", type=float, default=1.0)
     parser.add_argument("-p", "--pop", type=float, default=0.25)
-    parser.add_argument("-m", "--style", choices=STYLE_MODES, default="mixed")
+    parser.add_argument("-m", "-r", "--style", choices=STYLE_MODES, default="mixed")
     parser.add_argument("-l", "--logo", action="store_true")
     parser.add_argument("-f", "--fps", type=int, default=30)
     return parser

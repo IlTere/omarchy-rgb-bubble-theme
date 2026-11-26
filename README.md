@@ -90,23 +90,27 @@ bash ~/.config/omarchy/themes/rgb-bubble/install.sh uninstall
 `cbubbles` is a zero-dependency terminal animation bringing floating RGB glass bubbles and a pixel-art Omarchy centerpiece directly into your terminal.
 
 ```sh
-cbubbles                  # Classic floating Red, Green & Blue bubbles
-cbubbles -l               # Include the interactive centered Omarchy pixel logo
-cbubbles -s 1.6 -d high   # Faster upward drift and higher bubble density
-cbubbles -p neon -r pixel # Neon palette in pure pixel-block renderer
-cbubbles help             # Full CLI reference & interactive keybindings
+cbubbles                           # Classic floating Red, Green & Blue bubbles
+cbubbles -l                        # Include the interactive centered Omarchy pixel logo
+cbubbles -s 1.6 -d high            # Faster upward drift and higher bubble density
+cbubbles -c ocean -m pixel         # Ocean palette in pure pixel-block renderer
+cbubbles help                      # Full CLI reference & interactive keybindings
 ```
 
 ### Standalone `cbubbles` Package Installation
-- **Via installer script:**
+Every method below works **standalone** (even before installing the RGB Bubble theme) and installs the exact same `cbubbles` command:
+
+- **Via installer script (to `~/.local/bin/cbubbles`):**
   ```sh
   curl -fsSL https://raw.githubusercontent.com/IlTere/omarchy-rgb-bubble-theme/main/install.sh | bash -s -- cbubbles
   ```
 - **As an Arch Linux package (`pacman` / `makepkg`):**
   ```sh
-  cd packaging && makepkg -si
+  # Works standalone before or after installing the theme:
+  mkdir -p /tmp/cbubbles-pkg && curl -fsSL https://raw.githubusercontent.com/IlTere/omarchy-rgb-bubble-theme/main/packaging/PKGBUILD -o /tmp/cbubbles-pkg/PKGBUILD && (cd /tmp/cbubbles-pkg && makepkg -si) && rm -rf /tmp/cbubbles-pkg
   ```
-- **As a Python CLI package (`pipx` or `uv`):**
+  *(Or if the theme is already installed locally: `cd ~/.config/omarchy/themes/rgb-bubble/packaging && makepkg -si`)*
+- **As a Python CLI package (if using `pipx` or `uv`):**
   ```sh
   pipx install git+https://github.com/IlTere/omarchy-rgb-bubble-theme.git
   ```
